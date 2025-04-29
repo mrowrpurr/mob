@@ -13,6 +13,8 @@
   * [`[prebuilt]`](#prebuilt)
   * [`[versions]`](#versions)
   * [`[paths]`](#paths)
+  * [`[mo:local]`](#molocal)
+  * [`[mo:local:gamebryo]`](#molocalgamebryo)
 - [Command line](#command-line-1)
   * [Global options](#global-options)
   * [`build`](#build)
@@ -200,6 +202,32 @@ The various tools in this section are used verbatim when creating processes and 
 
 ### `[prebuilt]`
 Some tasks can use prebuilt binaries instead of building from source.
+
+### `[mo:local]`
+This section allows you to build local MO2 plugins alongside the standard ModOrganizer2 components without having to modify the core build system.
+
+| Option          | Type   | Description |
+| ---             | ---    | ---         |
+| `plugin_name`   | path   | Path to the local plugin directory. The key is the name of the plugin (e.g., `game_oblivionremaster`) and the value is the path to the plugin's directory. |
+
+Example:
+```ini
+[mo:local]
+game_oblivionremaster = D:/path/to/your/game_oblivionremaster
+```
+
+### `[mo:local:gamebryo]`
+Similar to `[mo:local]`, but for plugins that inherit from gamebryo classes. Plugins in this section will have the gamebryo flag set, which is important for proper translation file handling.
+
+Example:
+```ini
+[mo:local:gamebryo]
+game_customgame = D:/path/to/your/game_customgame
+```
+
+Note: Creating symbolic links on Windows typically requires administrator privileges. You can run MOB with administrator privileges to ensure symlinks can be created:
+- On Windows 11: `sudo mob build`
+- Or run Command Prompt as Administrator and then run `mob build`
 
 ### `[versions]`
 The versions for all the tasks.
