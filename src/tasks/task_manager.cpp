@@ -157,5 +157,58 @@ namespace mob {
 
         return false;
     }
+    
+    void task_manager::add_local_mo_tasks()
+    {
+        using namespace tasks;
+        
+        // Process [mo:local] and [mo:local:gamebryo] sections
+        try {
+            // The conf.cpp file has been modified to handle empty sections
+            // for mo:local and mo:local:gamebryo, so we can safely try to
+            // access these sections without bailing out
+            
+            // Process entries from the mo:local section (non-gamebryo plugins)
+            try {
+                for (const auto& key : {"game_oblivionremaster", "game_customgame"}) {
+                    try {
+                        std::string value = details::get_string("mo:local", key);
+                        if (!value.empty()) {
+                            gcx().debug(context::generic, "Adding local MO task: {} from {}", key, value);
+                            add_task<local_modorganizer>(key, fs::path(value), false);
+                        }
+                    }
+                    catch (bailed&) {
+                        // Key doesn't exist, that's fine
+                    }
+                }
+            }
+            catch (bailed&) {
+                // Section doesn't exist or is empty, that's fine
+            }
+            
+            // Process entries from the mo:local:gamebryo section (gamebryo plugins)
+            try {
+                for (const auto& key : {"game_oblivionremaster", "game_customgame"}) {
+                    try {
+                        std::string value = details::get_string("mo:local:gamebryo", key);
+                        if (!value.empty()) {
+                            gcx().debug(context::generic, "Adding local MO gamebryo task: {} from {}", key, value);
+                            add_task<local_modorganizer>(key, fs::path(value), true);
+                        }
+                    }
+                    catch (bailed&) {
+                        // Key doesn't exist, that's fine
+                    }
+                }
+            }
+            catch (bailed&) {
+                // Section doesn't exist or is empty, that's fine
+            }
+        }
+        catch (std::exception& e) {
+            gcx().warning(context::generic, "Failed to process local MO tasks: {}", e.what());
+        }
+    }
 
 }  // namespace mob

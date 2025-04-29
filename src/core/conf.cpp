@@ -54,12 +54,31 @@ namespace mob::details {
     std::string get_string(std::string_view section, std::string_view key)
     {
         auto sitor = g_conf.find(section);
-        if (sitor == g_conf.end())
+        if (sitor == g_conf.end()) {
+            // Special handling for mo:local and mo:local:gamebryo sections
+            // These sections can be empty in the ini file (only containing comments)
+            if (section == "mo:local" || section == "mo:local:gamebryo") {
+                // Create the section if it doesn't exist
+                g_conf[std::string(section)] = key_value_map();
+                gcx().debug(context::conf, "Created empty section [{}]", section);
+                
+                // Return empty string for any key in these sections
+                return "";
+            }
+            
             gcx().bail_out(context::conf, "[{}] doesn't exist", section);
+        }
 
         auto kitor = sitor->second.find(key);
-        if (kitor == sitor->second.end())
+        if (kitor == sitor->second.end()) {
+            // Special handling for mo:local and mo:local:gamebryo sections
+            // These sections can have any key, so we don't bail out if a key doesn't exist
+            if (section == "mo:local" || section == "mo:local:gamebryo") {
+                return "";
+            }
+            
             gcx().bail_out(context::conf, "no key '{}' in [{}]", key, section);
+        }
 
         return kitor->second;
     }

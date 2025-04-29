@@ -11,41 +11,6 @@
 
 namespace mob {
 
-    void add_local_mo_tasks()
-    {
-        using namespace tasks;
-        
-        // Process [mo:local] section
-        try {
-            // We need to iterate through all sections in the INI file
-            // and check if they match our patterns
-            for (auto&& section : {"mo:local", "mo:local:gamebryo"}) {
-                try {
-                    // Try to get values from the section
-                    // If the section doesn't exist, this will throw
-                    for (auto&& key : {"game_oblivionremaster", "game_customgame"}) {
-                        try {
-                            std::string value = details::get_string(section, key);
-                            bool is_gamebryo = (std::string(section) == "mo:local:gamebryo");
-                            
-                            gcx().debug(context::generic, "Adding local MO task: {} from {}", key, value);
-                            add_task<local_modorganizer>(key, fs::path(value), is_gamebryo);
-                        }
-                        catch (bailed&) {
-                            // Key doesn't exist, that's fine
-                        }
-                    }
-                }
-                catch (bailed&) {
-                    // Section doesn't exist, that's fine
-                }
-            }
-        }
-        catch (std::exception& e) {
-            gcx().warning(context::generic, "Failed to process local MO tasks: {}", e.what());
-        }
-    }
-
     void add_tasks()
     {
         using namespace tasks;
@@ -60,7 +25,7 @@ namespace mob {
         // if a task depends on another, it has to be earlier in the order
 
         // Add local MO tasks from INI
-        add_local_mo_tasks();
+        task_manager::instance().add_local_mo_tasks();
         
         // third-party tasks
 

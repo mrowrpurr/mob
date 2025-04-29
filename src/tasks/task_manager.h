@@ -51,25 +51,29 @@ namespace mob {
         //
         std::vector<task*> all();
 
-        // returns all top-level tasks, that is, tasks added with add()
-        //
-        std::vector<task*> top_level();
+    // returns all top-level tasks, that is, tasks added with add()
+    //
+    std::vector<task*> top_level();
 
-        // adds an alias
-        //
-        void add_alias(std::string name, std::vector<std::string> patterns);
+    // adds an alias
+    //
+    void add_alias(std::string name, std::vector<std::string> patterns);
 
-        // returns all aliases
-        //
-        const alias_map& aliases();
+    // returns all aliases
+    //
+    const alias_map& aliases();
+    
+    // adds local ModOrganizer tasks from the INI configuration
+    //
+    void add_local_mo_tasks();
 
-        // runs all top-level tasks sequentially, disabled tasks won't run
-        //
-        void run_all();
+    // runs all top-level tasks sequentially, disabled tasks won't run
+    //
+    void run_all();
 
-        // interrupts all tasks
-        //
-        void interrupt_all();
+    // interrupts all tasks
+    //
+    void interrupt_all();
 
     private:
         // top-level tasks
