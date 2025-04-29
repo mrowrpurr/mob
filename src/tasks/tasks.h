@@ -203,6 +203,27 @@ namespace mob::tasks {
     // usual static functions for source_path() and prebuilt() since there's a
     // variety of modorganizer objects, one per project
     //
+    class local_modorganizer : public basic_task<local_modorganizer> {
+    public:
+        local_modorganizer(std::string name, fs::path local_path, bool is_gamebryo = false);
+        
+        static fs::path source_path();
+        static bool prebuilt();
+        
+    protected:
+        void do_clean(clean c) override;
+        void do_fetch() override;
+        void do_build_and_install() override;
+        
+    private:
+        fs::path local_path_;
+        bool is_gamebryo_;
+        
+        cmake create_cmake_tool(cmake::ops o = cmake::generate);
+        msbuild create_msbuild_tool(msbuild::ops o = msbuild::build);
+        fs::path project_file_path();
+    };
+
     class modorganizer : public task {
     public:
         // path of the root modorganizer_super directory
