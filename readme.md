@@ -1,47 +1,27 @@
 ## Table of contents
 
-- [Table of contents](#table-of-contents)
 - [Quick start](#quick-start)
-- [Extended start](#extended-start)
-  - [Qt - CLI based install using aqt](#qt---cli-based-install-using-aqt)
-    - [Installing aqt via package manager](#installing-aqt-via-package-manager)
-    - [Installing aqt via python/pip](#installing-aqt-via-pythonpip)
-    - [Using aqt](#using-aqt)
-  - [Qt - Manual installation](#qt---manual-installation)
-  - [Visual Studio](#visual-studio)
-- [Setting up MOB](#setting-up-mob)
-  - [Prebuilts](#prebuilts)
+- [Slow start](#slow-start)
 - [Changing options](#changing-options)
-  - [INI files](#ini-files)
-  - [Command line](#command-line)
-  - [INI format](#ini-format)
+  * [INI files](#ini-files)
+  * [Command line](#command-line)
+  * [INI format](#ini-format)
 - [Options](#options)
-  - [`[global]`](#global)
-  - [`[task]`](#task)
-    - [Common git options](#common-git-options)
-    - [Git credentials](#git-credentials)
-    - [Origin and upstream remotes](#origin-and-upstream-remotes)
-  - [`[tools]`](#tools)
-  - [`[prebuilt]`](#prebuilt)
-  - [`[mo:local]` and `[mo:local:gamebryo]`](#molocal-and-molocalgamebryo)
-  - [`[versions]`](#versions)
-  - [`[paths]`](#paths)
+  * [`[global]`](#global)
+  * [`[task]`](#task)
+  * [`[tools]`](#tools)
+  * [`[prebuilt]`](#prebuilt)
+  * [`[versions]`](#versions)
+  * [`[paths]`](#paths)
 - [Command line](#command-line-1)
-  - [Global options](#global-options)
-  - [`build`](#build)
-    - [Task names](#task-names)
-    - [Options](#options-1)
-  - [`list`](#list)
-    - [Options](#options-2)
-  - [`options`](#options-3)
-  - [`release`](#release)
-    - [Options](#options-4)
-  - [`git`](#git)
-    - [`set-remotes`](#set-remotes)
-    - [`add-remote`](#add-remote)
-  - [`cmake`](#cmake)
-    - [Options](#options-5)
-  - [`inis`](#inis)
+  * [Global options](#global-options)
+  * [`build`](#build)
+  * [`list`](#list)
+  * [`options`](#options)
+  * [`release`](#release)
+  * [`git`](#git)
+  * [`cmake`](#cmake)
+  * [`inis`](#inis)
 
 
 ## Quick start
@@ -220,32 +200,6 @@ The various tools in this section are used verbatim when creating processes and 
 
 ### `[prebuilt]`
 Some tasks can use prebuilt binaries instead of building from source.
-
-### `[mo:local]` and `[mo:local:gamebryo]`
-These sections allow you to build local MO2 plugins alongside the standard ModOrganizer2 components without having to modify the core build system.
-
-| Option          | Type   | Description |
-| ---             | ---    | ---         |
-| `plugin_name`   | path   | Path to the local plugin directory. The key is the name of the plugin (e.g., `game_oblivionremaster`) and the value is the path to the plugin's directory. |
-
-The `[mo:local]` section is for regular MO2 plugins, while the `[mo:local:gamebryo]` section is for plugins that inherit from gamebryo classes. Plugins in the `[mo:local:gamebryo]` section will have the gamebryo flag set, which is important for proper translation file handling.
-
-Example:
-```ini
-[mo:local]
-game_oblivionremaster = D:/path/to/your/game_oblivionremaster
-
-[mo:local:gamebryo]
-game_customgame = D:/path/to/your/game_customgame
-```
-
-When building with these sections defined, MOB will:
-1. Create symbolic links from the modorganizer_super directory to your local plugin directories
-2. Build the plugins using the same CMake configuration as regular MO2 plugins
-
-Note: Creating symbolic links on Windows typically requires administrator privileges. You can run MOB with administrator privileges to ensure symlinks can be created:
-- On Windows 11: `sudo mob build`
-- Or run Command Prompt as Administrator and then run `mob build`
 
 ### `[versions]`
 The versions for all the tasks.
