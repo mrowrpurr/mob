@@ -172,6 +172,24 @@ namespace mob::tasks {
     protected:
         void do_build_and_install() override;
     };
+    
+    class local_tasks : public task {
+    public:
+        enum flags {
+            noflags = 0x00,
+            gamebryo = 0x01
+        };
+        
+        local_tasks(flags f = noflags);
+        
+    protected:
+        void do_clean(clean c) override;
+        void do_fetch() override;
+        void do_build_and_install() override;
+        
+    private:
+        flags flags_;
+    };
 
     class lz4 : public basic_task<lz4> {
     public:

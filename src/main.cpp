@@ -115,7 +115,8 @@ namespace mob {
             .add_task<mo>("modorganizer-plugin_python");
 
         // Add local MO tasks from INI
-        task_manager::instance().add_local_mo_tasks();
+        add_task<tasks::local_tasks>();
+        add_task<tasks::local_tasks>(tasks::local_tasks::gamebryo);
 
         add_task<parallel_tasks>()
             .add_task<mo>({"modorganizer-tool_configurator", "pycfg"})
