@@ -128,6 +128,7 @@ namespace mob {
 
         add_task<translations>();
         add_task<installer>();
+        add_task<local_plugins>();
     }
 
     // figures out which command to run and returns it, if any

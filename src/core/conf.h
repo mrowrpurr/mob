@@ -293,6 +293,10 @@ namespace mob {
         // opens the log file, creates the directory if needed
         //
         void set_log_file();
+
+        // returns a map of key-value pairs for the given section
+        //
+        std::map<std::string, std::string> get_section(const std::string& section);
     };
 
 }  // namespace mob

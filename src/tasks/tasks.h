@@ -7,6 +7,13 @@
 #include "../utility.h"
 #include "task.h"
 
+// Forward declaration for initialize_super
+namespace mob {
+    namespace tasks {
+        void initialize_super(context& cx, const fs::path& super_root);
+    }
+}
+
 namespace mob::tasks {
 
     // single header for all the tasks, not worth having a header per task
@@ -691,6 +698,28 @@ namespace mob::tasks {
     private:
         cmake create_cmake_tool(cmake::ops o = cmake::generate);
         msbuild create_msbuild_tool(msbuild::ops o = msbuild::build);
+    };
+
+    class local_plugins : public task {
+    public:
+        local_plugins();
+
+        static fs::path source_path();
+
+    protected:
+        void do_clean(clean c) override;
+        void do_fetch() override;
+        void do_build_and_install() override;
+
+    private:
+        // Read local_plugins section from INI
+        std::map<std::string, fs::path> read_local_plugins();
+        
+        // Create junction points in modorganizer_super
+        void create_junction_points(const std::map<std::string, fs::path>& plugins);
+        
+        // Build each plugin using the modorganizer task approach
+        void build_plugins(const std::map<std::string, fs::path>& plugins);
     };
 
 }  // namespace mob::tasks

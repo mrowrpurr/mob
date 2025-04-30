@@ -781,4 +781,18 @@ namespace mob {
 
     conf_paths::conf_paths() : conf_section("paths") {}
 
+    std::map<std::string, std::string> conf::get_section(const std::string& section)
+    {
+        auto sitor = details::g_conf.find(section);
+        if (sitor == details::g_conf.end())
+            return {};
+
+        // Convert from details::key_value_map to std::map<std::string, std::string>
+        std::map<std::string, std::string> result;
+        for (const auto& [k, v] : sitor->second) {
+            result[k] = v;
+        }
+        return result;
+    }
+
 }  // namespace mob
