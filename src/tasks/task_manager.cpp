@@ -164,58 +164,22 @@ namespace mob {
     {
         // Process [mo:local] and [mo:local:gamebryo] sections
         try {
-            // Get all options from the configuration
-            auto options = format_options();
-            
-            // We need to extract all keys from the mo:local and mo:local:gamebryo sections
-            // This is a bit tricky since we don't have direct access to the section keys
-            // We'll use the format_options() function to get all options and extract the keys
-            
-            std::vector<std::string> local_keys;
-            std::vector<std::string> gamebryo_keys;
-            
-            // Extract keys from the formatted options
-            for (const auto& line : options) {
-                if (line.find("mo:local  ") == 0 && line.find(" = ") != std::string::npos) {
-                    auto key_start = line.find("  ") + 2;
-                    auto key_end = line.find(" = ");
-                    auto key = line.substr(key_start, key_end - key_start);
-                    
-                    // Skip if it's a comment line
-                    if (key.empty() || key[0] == '#' || key[0] == ';') {
-                        continue;
-                    }
-                    
-                    local_keys.push_back(key);
-                }
-                else if (line.find("mo:local:gamebryo  ") == 0 && line.find(" = ") != std::string::npos) {
-                    auto key_start = line.find("  ") + 2;
-                    auto key_end = line.find(" = ");
-                    auto key = line.substr(key_start, key_end - key_start);
-                    
-                    // Skip if it's a comment line
-                    if (key.empty() || key[0] == '#' || key[0] == ';') {
-                        continue;
-                    }
-                    
-                    gamebryo_keys.push_back(key);
-                }
-            }
-            
-            // Now process the keys using the proper configuration access methods
+            // Access the configuration data structure directly
+            // This is the proper way to access all keys in a section
             
             // Process entries from the mo:local section (non-gamebryo plugins)
             try {
-                for (const auto& key : local_keys) {
-                    try {
-                        std::string value = mob::details::get_string("mo:local", key);
-                        if (!value.empty()) {
-                            gcx().debug(context::generic, "Adding local MO task: {} from {}", key, value);
-                            mob::add_task<mob::tasks::local_modorganizer>(key, fs::path(value), false);
+                auto sitor = details::g_conf.find("mo:local");
+                if (sitor != details::g_conf.end()) {
+                    // Iterate through all keys in the section
+                    for (auto&& [key, value] : sitor->second) {
+                        // Skip empty values or comment-only values
+                        if (value.empty() || value[0] == '#' || value[0] == ';') {
+                            continue;
                         }
-                    }
-                    catch (bailed&) {
-                        // Key doesn't exist, that's fine
+                        
+                        gcx().debug(context::generic, "Adding local MO task: {} from {}", key, value);
+                        add_task<tasks::local_modorganizer>(key, fs::path(value), false);
                     }
                 }
             }
@@ -225,16 +189,17 @@ namespace mob {
             
             // Process entries from the mo:local:gamebryo section (gamebryo plugins)
             try {
-                for (const auto& key : gamebryo_keys) {
-                    try {
-                        std::string value = mob::details::get_string("mo:local:gamebryo", key);
-                        if (!value.empty()) {
-                            gcx().debug(context::generic, "Adding local MO gamebryo task: {} from {}", key, value);
-                            mob::add_task<mob::tasks::local_modorganizer>(key, fs::path(value), true);
+                auto sitor = details::g_conf.find("mo:local:gamebryo");
+                if (sitor != details::g_conf.end()) {
+                    // Iterate through all keys in the section
+                    for (auto&& [key, value] : sitor->second) {
+                        // Skip empty values or comment-only values
+                        if (value.empty() || value[0] == '#' || value[0] == ';') {
+                            continue;
                         }
-                    }
-                    catch (bailed&) {
-                        // Key doesn't exist, that's fine
+                        
+                        gcx().debug(context::generic, "Adding local MO gamebryo task: {} from {}", key, value);
+                        add_task<tasks::local_modorganizer>(key, fs::path(value), true);
                     }
                 }
             }
