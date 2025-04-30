@@ -13,7 +13,7 @@ namespace mob::tasks {
         
         // Make sure the local path exists
         if (!fs::exists(local_path_)) {
-            throw std::runtime_error(fmt::format("Local path does not exist: {}", local_path_.string()));
+            throw std::runtime_error("Local path does not exist: " + local_path_.string());
         }
         
         // Check if the symlink already exists
@@ -22,23 +22,21 @@ namespace mob::tasks {
                 // Symlink exists, all good
                 return;
             } else {
-                throw std::runtime_error(fmt::format(
-                    "Path exists but is not a symlink: {}\n"
-                    "Please remove the directory and create a symlink instead:\n"
-                    "1. Remove: {}\n"
-                    "2. Run: mklink /D \"{}\" \"{}\"\n"
-                    "3. Then run mob build again", 
-                    link_path.string(), link_path.string(), link_path.string(), local_path_.string()));
+                std::string error_message = "Path exists but is not a symlink: " + link_path.string() + "\n";
+                error_message += "Please remove the directory and create a symlink instead:\n";
+                error_message += "1. Remove: " + link_path.string() + "\n";
+                error_message += "2. Run: mklink /D \"" + link_path.string() + "\" \"" + local_path_.string() + "\"\n";
+                error_message += "3. Then run mob build again";
+                throw std::runtime_error(error_message);
             }
         }
         
         // Symlink doesn't exist, tell the user to create it
-        throw std::runtime_error(fmt::format(
-            "Symlink does not exist: {}\n"
-            "Please create the symlink manually:\n"
-            "1. Run: mklink /D \"{}\" \"{}\"\n"
-            "2. Then run mob build again",
-            link_path.string(), link_path.string(), local_path_.string()));
+        std::string error_message = "Symlink does not exist: " + link_path.string() + "\n";
+        error_message += "Please create the symlink manually:\n";
+        error_message += "1. Run: mklink /D \"" + link_path.string() + "\" \"" + local_path_.string() + "\"\n";
+        error_message += "2. Then run mob build again";
+        throw std::runtime_error(error_message);
     }
 
     // Static functions required by basic_task
