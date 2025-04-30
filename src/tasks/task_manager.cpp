@@ -164,13 +164,49 @@ namespace mob {
     {
         // Process [mo:local] and [mo:local:gamebryo] sections
         try {
-            // The conf.cpp file has been modified to handle empty sections
-            // for mo:local and mo:local:gamebryo, so we can safely try to
-            // access these sections without bailing out
+            // Get all options from the configuration
+            auto options = format_options();
+            
+            // We need to extract all keys from the mo:local and mo:local:gamebryo sections
+            // This is a bit tricky since we don't have direct access to the section keys
+            // We'll use the format_options() function to get all options and extract the keys
+            
+            std::vector<std::string> local_keys;
+            std::vector<std::string> gamebryo_keys;
+            
+            // Extract keys from the formatted options
+            for (const auto& line : options) {
+                if (line.find("mo:local  ") == 0 && line.find(" = ") != std::string::npos) {
+                    auto key_start = line.find("  ") + 2;
+                    auto key_end = line.find(" = ");
+                    auto key = line.substr(key_start, key_end - key_start);
+                    
+                    // Skip if it's a comment line
+                    if (key.empty() || key[0] == '#' || key[0] == ';') {
+                        continue;
+                    }
+                    
+                    local_keys.push_back(key);
+                }
+                else if (line.find("mo:local:gamebryo  ") == 0 && line.find(" = ") != std::string::npos) {
+                    auto key_start = line.find("  ") + 2;
+                    auto key_end = line.find(" = ");
+                    auto key = line.substr(key_start, key_end - key_start);
+                    
+                    // Skip if it's a comment line
+                    if (key.empty() || key[0] == '#' || key[0] == ';') {
+                        continue;
+                    }
+                    
+                    gamebryo_keys.push_back(key);
+                }
+            }
+            
+            // Now process the keys using the proper configuration access methods
             
             // Process entries from the mo:local section (non-gamebryo plugins)
             try {
-                for (const auto& key : {"game_oblivionremaster", "game_customgame"}) {
+                for (const auto& key : local_keys) {
                     try {
                         std::string value = mob::details::get_string("mo:local", key);
                         if (!value.empty()) {
@@ -189,7 +225,7 @@ namespace mob {
             
             // Process entries from the mo:local:gamebryo section (gamebryo plugins)
             try {
-                for (const auto& key : {"game_oblivionremaster", "game_customgame"}) {
+                for (const auto& key : gamebryo_keys) {
                     try {
                         std::string value = mob::details::get_string("mo:local:gamebryo", key);
                         if (!value.empty()) {
