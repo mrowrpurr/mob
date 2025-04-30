@@ -7,36 +7,7 @@ namespace mob::tasks {
     local_modorganizer::local_modorganizer(std::string name, fs::path local_path, bool is_gamebryo)
         : basic_task(std::move(name)), local_path_(std::move(local_path)), is_gamebryo_(is_gamebryo)
     {
-        // Check for symlink right away
-        fs::path super_path = modorganizer::super_path();
-        fs::path link_path = super_path / name();
-        
-        // Make sure the local path exists
-        if (!fs::exists(local_path_)) {
-            throw std::runtime_error("Local path does not exist: " + local_path_.string());
-        }
-        
-        // Check if the symlink already exists
-        if (fs::exists(link_path)) {
-            if (fs::is_symlink(link_path)) {
-                // Symlink exists, all good
-                return;
-            } else {
-                std::string error_message = "Path exists but is not a symlink: " + link_path.string() + "\n";
-                error_message += "Please remove the directory and create a symlink instead:\n";
-                error_message += "1. Remove: " + link_path.string() + "\n";
-                error_message += "2. Run: mklink /D \"" + link_path.string() + "\" \"" + local_path_.string() + "\"\n";
-                error_message += "3. Then run mob build again";
-                throw std::runtime_error(error_message);
-            }
-        }
-        
-        // Symlink doesn't exist, tell the user to create it
-        std::string error_message = "Symlink does not exist: " + link_path.string() + "\n";
-        error_message += "Please create the symlink manually:\n";
-        error_message += "1. Run: mklink /D \"" + link_path.string() + "\" \"" + local_path_.string() + "\"\n";
-        error_message += "2. Then run mob build again";
-        throw std::runtime_error(error_message);
+        // Constructor is simple, checks are done in do_fetch()
     }
 
     // Static functions required by basic_task
