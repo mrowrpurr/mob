@@ -113,23 +113,28 @@ namespace mob::tasks {
 
     void local_plugins::build_plugins(const std::map<std::string, fs::path>& plugins)
     {
-        // For each plugin, build it using the task manager
+        // For each plugin, create and run a modorganizer task with the local flag
         for (const auto& [name, path] : plugins) {
             cx().info(context::generic, "building local plugin {}", name);
             
-            // Find the task in the task manager and run it
-            auto& tm = task_manager::instance();
-            auto tasks = tm.find(name);
-            
-            if (tasks.empty()) {
-                cx().warning(context::generic, "no task found for plugin {}", name);
+            // Check if the plugin has a CMakeLists.txt
+            if (!fs::exists(path / "CMakeLists.txt")) {
+                cx().warning(context::generic, "plugin {} has no CMakeLists.txt, skipping", name);
                 continue;
             }
             
-            // Run the task
-            for (auto* t : tasks) {
-                t->run();
+            // Determine if this is a gamebryo plugin based on the name
+            modorganizer::flags flags = modorganizer::noflags;
+            if (name.find("game_") == 0 || name.find("modorganizer-game_") == 0) {
+                flags = modorganizer::gamebryo;
+                cx().debug(context::generic, "detected gamebryo plugin: {}", name);
             }
+            
+            // Create a modorganizer task for this plugin
+            modorganizer mo_task(name, path, flags);
+            
+            // Run the task
+            mo_task.run();
         }
     }
 

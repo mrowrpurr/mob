@@ -234,6 +234,9 @@ namespace mob::tasks {
             // project that uses nuget, cmake doesn't support those right now, so
             // `msbuild -t:restore` has to be run manually
             nuget = 0x02,
+            
+            // local plugin, not from git but from a local directory
+            local = 0x04,
         };
 
         // some mo tasks have more than one name, mostly because the transifex slugs
@@ -243,6 +246,9 @@ namespace mob::tasks {
         modorganizer(std::string name, flags f = noflags);
         modorganizer(std::vector<std::string> names, flags f = noflags);
         modorganizer(std::vector<const char*> names, flags f = noflags);
+        
+        // constructor for local plugins, sets the local flag automatically
+        modorganizer(std::string name, const fs::path& local_path, flags f = noflags);
 
         // whether this project has the gamebryo flag on
         //
@@ -251,6 +257,10 @@ namespace mob::tasks {
         // whether this project has the nuget flag on
         //
         bool is_nuget_plugin() const;
+        
+        // whether this project is a local plugin
+        //
+        bool is_local_plugin() const;
 
         // url to the git repo
         //
@@ -279,6 +289,7 @@ namespace mob::tasks {
         std::string repo_;
         std::string project_;
         flags flags_;
+        fs::path local_path_;  // Path to local plugin directory (only used if local flag is set)
 
         // creates the cmake tool for this MO project
         //

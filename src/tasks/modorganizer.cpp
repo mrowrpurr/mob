@@ -79,6 +79,12 @@ namespace mob::tasks {
             project_ = make_names(names)[0];
         }
     }
+    
+    modorganizer::modorganizer(std::string name, const fs::path& local_path, flags f)
+        : task({name}), repo_(name), flags_(static_cast<flags>(f | local)), local_path_(local_path)
+    {
+        project_ = name;
+    }
 
     bool modorganizer::is_gamebryo_plugin() const
     {
@@ -88,6 +94,11 @@ namespace mob::tasks {
     bool modorganizer::is_nuget_plugin() const
     {
         return is_set(flags_, nuget);
+    }
+    
+    bool modorganizer::is_local_plugin() const
+    {
+        return is_set(flags_, local);
     }
 
     fs::path modorganizer::source_path() const
@@ -149,6 +160,13 @@ namespace mob::tasks {
         // make sure the super directory is initialized, only done once
         initialize_super(cx(), super_path());
 
+        if (is_local_plugin()) {
+            // For local plugins, we don't need to fetch anything from git
+            // The junction point is already created by the local_plugins task
+            cx().debug(context::generic, "skipping fetch for local plugin {}", name());
+            return;
+        }
+
         // find the best suitable branch
         const auto fallback = task_conf().mo_fallback_branch();
         auto branch         = task_conf().mo_branch();
@@ -165,15 +183,18 @@ namespace mob::tasks {
 
     void modorganizer::do_build_and_install()
     {
-        // adds a git submodule in modorganizer_super for this project; note that
-        // git_submodule_adder runs a thread because adding submodules is slow, but
-        // can happen while stuff is building
-        git_submodule_adder::instance().queue(
-            std::move(git_submodule()
-                          .url(git_url())
-                          .branch(task_conf().mo_branch())
-                          .submodule(name())
-                          .root(super_path())));
+        // Only add git submodule for non-local plugins
+        if (!is_local_plugin()) {
+            // adds a git submodule in modorganizer_super for this project; note that
+            // git_submodule_adder runs a thread because adding submodules is slow, but
+            // can happen while stuff is building
+            git_submodule_adder::instance().queue(
+                std::move(git_submodule()
+                              .url(git_url())
+                              .branch(task_conf().mo_branch())
+                              .submodule(name())
+                              .root(super_path())));
+        }
 
         // not all modorganizer projects need to actually be built, such as
         // cmake_common, so don't try if there's no cmake file
