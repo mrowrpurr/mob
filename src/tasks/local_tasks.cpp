@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "tasks.h"
 #include "../core/conf.h"
+#include "../core/ini.h"
 #include "../tasks/task_manager.h"
 
 namespace mob::tasks {
@@ -22,91 +23,72 @@ namespace mob::tasks {
 
     void local_tasks::do_build_and_install()
     {
-        // Get all options from the configuration
-        auto options = format_options();
-        
-        // Extract keys from the formatted options
-        std::vector<std::string> local_keys;
-        std::vector<std::string> gamebryo_keys;
-        
-        for (const auto& line : options) {
-            if (line.find("local  ") == 0 && line.find(" = ") != std::string::npos) {
-                auto key_start = line.find("  ") + 2;
-                auto key_end = line.find(" = ");
-                auto key = line.substr(key_start, key_end - key_start);
-                
-                // Skip if it's a comment line
-                if (key.empty() || key[0] == '#' || key[0] == ';') {
-                    continue;
-                }
-                
-                local_keys.push_back(key);
-            }
-            else if (line.find("local_gamebryo  ") == 0 && line.find(" = ") != std::string::npos) {
-                auto key_start = line.find("  ") + 2;
-                auto key_end = line.find(" = ");
-                auto key = line.substr(key_start, key_end - key_start);
-                
-                // Skip if it's a comment line
-                if (key.empty() || key[0] == '#' || key[0] == ';') {
-                    continue;
-                }
-                
-                gamebryo_keys.push_back(key);
-            }
-        }
-        
-        // Debug output
-        cx().debug(context::generic, "Found {} local keys and {} local_gamebryo keys", 
-            local_keys.size(), gamebryo_keys.size());
-        
-        // Process entries from the local section (non-gamebryo plugins)
-        if (!is_set(flags_, gamebryo)) {
-            for (const auto& key : local_keys) {
-                try {
-                    std::string value = details::get_string("local", key);
-                    if (!value.empty()) {
-                        cx().debug(context::generic, "Adding local MO task: {} from {}", key, value);
-                        add_task<tasks::local_modorganizer>(key, fs::path(value), false);
-                    }
-                }
-                catch (bailed&) {
-                    // Key doesn't exist, that's fine
-                }
-            }
-        }
-        
-        // Process entries from the local_gamebryo section (gamebryo plugins)
-        if (is_set(flags_, gamebryo)) {
-            for (const auto& key : gamebryo_keys) {
-                try {
-                    std::string value = details::get_string("local_gamebryo", key);
-                    if (!value.empty()) {
-                        cx().debug(context::generic, "Adding local MO gamebryo task: {} from {}", key, value);
-                        add_task<tasks::local_modorganizer>(key, fs::path(value), true);
-                    }
-                }
-                catch (bailed&) {
-                    // Key doesn't exist, that's fine
-                }
-            }
-        }
-        
-        // If no keys were found, try to directly access the keys
-        if (local_keys.empty() && gamebryo_keys.empty()) {
-            cx().debug(context::generic, "No keys found in formatted options, trying direct access");
+        // Directly access the INI file
+        try {
+            // Get the INI file path
+            fs::path ini_path = conf().path().prefix() / "mob.ini";
             
-            // Try to directly access the hello_world_plugin key
+            // Parse the INI file
+            ini_data ini = parse_ini(ini_path);
+            
+            // Process entries from the local section (non-gamebryo plugins)
+            if (!is_set(flags_, gamebryo)) {
+                // Get the local section
+                auto local_section = ini.get_section("local");
+                
+                // Log the number of entries
+                cx().info(context::generic, "Found {} entries in [local] section", local_section.size());
+                
+                // Process each entry
+                for (auto& [key, value] : local_section) {
+                    // Skip if it's a comment line or empty value
+                    if (key.empty() || key[0] == '#' || key[0] == ';' || value.empty()) {
+                        continue;
+                    }
+                    
+                    cx().info(context::generic, "Adding local MO task: {} from {}", key, value);
+                    add_task<tasks::local_modorganizer>(key, fs::path(value), false);
+                }
+            }
+            
+            // Process entries from the local_gamebryo section (gamebryo plugins)
+            if (is_set(flags_, gamebryo)) {
+                // Get the local_gamebryo section
+                auto gamebryo_section = ini.get_section("local_gamebryo");
+                
+                // Log the number of entries
+                cx().info(context::generic, "Found {} entries in [local_gamebryo] section", gamebryo_section.size());
+                
+                // Process each entry
+                for (auto& [key, value] : gamebryo_section) {
+                    // Skip if it's a comment line or empty value
+                    if (key.empty() || key[0] == '#' || key[0] == ';' || value.empty()) {
+                        continue;
+                    }
+                    
+                    cx().info(context::generic, "Adding local MO gamebryo task: {} from {}", key, value);
+                    add_task<tasks::local_modorganizer>(key, fs::path(value), true);
+                }
+            }
+        }
+        catch (std::exception& e) {
+            cx().warning(context::generic, "Failed to process local MO tasks: {}", e.what());
+            
+            // Fallback to direct access
+            cx().info(context::generic, "Falling back to direct access");
+            
+            // Try to directly access the mo2_plugin_examples key
             if (!is_set(flags_, gamebryo)) {
                 try {
-                    std::string value = details::get_string("local", "hello_world_plugin");
+                    std::string value = details::get_string("local", "mo2_plugin_examples");
                     if (!value.empty()) {
-                        cx().debug(context::generic, "Adding local MO task: hello_world_plugin from {}", value);
-                        add_task<tasks::local_modorganizer>("hello_world_plugin", fs::path(value), false);
+                        cx().info(context::generic, "Adding local MO task: mo2_plugin_examples from {}", value);
+                        add_task<tasks::local_modorganizer>("mo2_plugin_examples", fs::path(value), false);
                     }
                 }
                 catch (bailed&) {
                     // Key doesn't exist, that's fine
+                    cx().warning(context::generic, "Failed to access [local]/mo2_plugin_examples");
                 }
             }
         }
