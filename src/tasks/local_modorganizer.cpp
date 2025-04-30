@@ -12,10 +12,9 @@ namespace mob::tasks {
     // Static functions required by basic_task
     fs::path local_modorganizer::source_path()
     {
-        // This is a static function, but we need to access instance data
-        // Since this is just a placeholder for basic_task, it's not actually used
-        static fs::path dummy;
-        return dummy;
+        // In a static method, we can't access instance data
+        // Return the super path, which will be used as the base for the symlink
+        return modorganizer::super_path();
     }
 
     bool local_modorganizer::prebuilt()

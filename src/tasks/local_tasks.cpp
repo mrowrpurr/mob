@@ -31,7 +31,22 @@ namespace mob::tasks {
                 
                 if (!value.empty()) {
                     cx().info(context::generic, "Adding local MO task: mo2_plugin_examples from {}", value);
+                    
+                    // Log the absolute path
+                    fs::path abs_path = fs::absolute(fs::path(value));
+                    cx().info(context::generic, "Absolute path: {}", abs_path.string());
+                    
+                    // Check if the path exists
+                    if (fs::exists(abs_path)) {
+                        cx().info(context::generic, "Path exists");
+                    } else {
+                        cx().warning(context::generic, "Path does not exist: {}", abs_path.string());
+                    }
+                    
+                    // Add the task
+                    cx().info(context::generic, "Creating task...");
                     add_task<tasks::local_modorganizer>("mo2_plugin_examples", fs::path(value), false);
+                    cx().info(context::generic, "Task created successfully");
                 }
             }
             catch (bailed&) {
