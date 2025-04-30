@@ -23,12 +23,28 @@ namespace mob::tasks {
 
     void local_tasks::do_build_and_install()
     {
+        // Log that we're starting
+        log::info("Starting local_tasks::do_build_and_install()");
+        
         // Try to directly access the mo2_plugin_examples key
         if (!is_set(flags_, gamebryo)) {
             try {
+                // Log the INI file path
+                fs::path ini_path = conf().path().prefix() / "mob.ini";
+                log::info("INI file path: {}", ini_path);
+                
+                // Check if the INI file exists
+                if (!fs::exists(ini_path)) {
+                    log::error("INI file does not exist: {}", ini_path);
+                    return;
+                }
+                
                 // Process all keys in the local section
-                auto ini_data = parse_ini(conf().path().prefix() / "mob.ini");
+                log::info("Parsing INI file...");
+                auto ini_data = parse_ini(ini_path);
+                log::info("Getting [local] section...");
                 auto local_section = ini_data.get_section("local");
+                log::info("Found {} entries in [local] section", local_section.size());
                 
                 for (auto& [key, value] : local_section) {
                     // Skip if it's a comment line or empty value
