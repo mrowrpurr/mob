@@ -45,21 +45,40 @@ namespace mob::tasks {
 
     void local_modorganizer::do_fetch()
     {
-        // Skip symlink creation and just use the local path directly
-        cx().info(context::generic, "Using local path directly: {}", local_path_.string());
+        // Create a symlink from the modorganizer_super directory to the local directory
+        fs::path super_path = modorganizer::super_path();
+        fs::path link_path = super_path / name();
+        
+        cx().info(context::generic, "Checking for symlink from {} to {}", link_path, local_path_);
         
         // Make sure the local path exists
         if (!fs::exists(local_path_)) {
-            cx().warning(context::generic, "Local path does not exist: {}", local_path_.string());
-            return;
+            cx().error(context::generic, "Local path does not exist: {}", local_path_);
+            cx().error(context::generic, "Please make sure the path exists and try again");
+            throw bailed();
         }
         
-        // Check if the local path has a CMakeLists.txt
-        if (!fs::exists(local_path_ / "CMakeLists.txt")) {
-            cx().warning(context::generic, "Local path does not have a CMakeLists.txt: {}", local_path_.string());
-        } else {
-            cx().info(context::generic, "Found CMakeLists.txt in local path");
+        // Check if the symlink already exists
+        if (fs::exists(link_path)) {
+            if (fs::is_symlink(link_path)) {
+                cx().info(context::generic, "Symlink already exists");
+                return;
+            } else {
+                cx().error(context::generic, "Path exists but is not a symlink: {}", link_path);
+                cx().error(context::generic, "Please remove the directory and create a symlink instead:");
+                cx().error(context::generic, "1. Remove: {}", link_path);
+                cx().error(context::generic, "2. Run: mklink /D \"{}\" \"{}\"", link_path, local_path_);
+                cx().error(context::generic, "3. Then run mob build again");
+                throw bailed();
+            }
         }
+        
+        // Symlink doesn't exist, tell the user to create it
+        cx().error(context::generic, "Symlink does not exist: {}", link_path);
+        cx().error(context::generic, "Please create the symlink manually:");
+        cx().error(context::generic, "1. Run: mklink /D \"{}\" \"{}\"", link_path, local_path_);
+        cx().error(context::generic, "2. Then run mob build again");
+        throw bailed();
     }
 
     void local_modorganizer::do_build_and_install()
