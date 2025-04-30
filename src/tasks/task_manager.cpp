@@ -162,7 +162,7 @@ namespace mob {
     
     void task_manager::add_local_mo_tasks()
     {
-        // Process [mo:local] and [mo:local:gamebryo] sections
+        // Process [local] and [local_gamebryo] sections
         try {
             // We need to extract keys from the formatted options
             // This is the only way to get all keys in a section without direct access to the internal data structure
@@ -173,7 +173,7 @@ namespace mob {
             std::vector<std::string> gamebryo_keys;
             
             for (const auto& line : options) {
-                if (line.find("mo:local  ") == 0 && line.find(" = ") != std::string::npos) {
+                if (line.find("local  ") == 0 && line.find(" = ") != std::string::npos) {
                     auto key_start = line.find("  ") + 2;
                     auto key_end = line.find(" = ");
                     auto key = line.substr(key_start, key_end - key_start);
@@ -185,7 +185,7 @@ namespace mob {
                     
                     local_keys.push_back(key);
                 }
-                else if (line.find("mo:local:gamebryo  ") == 0 && line.find(" = ") != std::string::npos) {
+                else if (line.find("local_gamebryo  ") == 0 && line.find(" = ") != std::string::npos) {
                     auto key_start = line.find("  ") + 2;
                     auto key_end = line.find(" = ");
                     auto key = line.substr(key_start, key_end - key_start);
@@ -199,10 +199,10 @@ namespace mob {
                 }
             }
             
-            // Process entries from the mo:local section (non-gamebryo plugins)
+            // Process entries from the local section (non-gamebryo plugins)
             for (const auto& key : local_keys) {
                 try {
-                    std::string value = details::get_string("mo:local", key);
+                    std::string value = details::get_string("local", key);
                     if (!value.empty()) {
                         gcx().debug(context::generic, "Adding local MO task: {} from {}", key, value);
                         add_task<tasks::local_modorganizer>(key, fs::path(value), false);
@@ -213,10 +213,10 @@ namespace mob {
                 }
             }
             
-            // Process entries from the mo:local:gamebryo section (gamebryo plugins)
+            // Process entries from the local_gamebryo section (gamebryo plugins)
             for (const auto& key : gamebryo_keys) {
                 try {
-                    std::string value = details::get_string("mo:local:gamebryo", key);
+                    std::string value = details::get_string("local_gamebryo", key);
                     if (!value.empty()) {
                         gcx().debug(context::generic, "Adding local MO gamebryo task: {} from {}", key, value);
                         add_task<tasks::local_modorganizer>(key, fs::path(value), true);

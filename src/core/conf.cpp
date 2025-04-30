@@ -55,9 +55,9 @@ namespace mob::details {
     {
         auto sitor = g_conf.find(section);
         if (sitor == g_conf.end()) {
-            // Special handling for mo:local and mo:local:gamebryo sections
+            // Special handling for local and local_gamebryo sections
             // These sections can be empty in the ini file (only containing comments)
-            if (section == "mo:local" || section == "mo:local:gamebryo") {
+            if (section == "local" || section == "local_gamebryo") {
                 // Create the section if it doesn't exist
                 g_conf[std::string(section)] = key_value_map();
                 gcx().debug(context::conf, "Created empty section [{}]", section);
@@ -71,9 +71,9 @@ namespace mob::details {
 
         auto kitor = sitor->second.find(key);
         if (kitor == sitor->second.end()) {
-            // Special handling for mo:local and mo:local:gamebryo sections
+            // Special handling for local and local_gamebryo sections
             // These sections can have any key, so we don't bail out if a key doesn't exist
-            if (section == "mo:local" || section == "mo:local:gamebryo") {
+            if (section == "local" || section == "local_gamebryo") {
                 return "";
             }
             
