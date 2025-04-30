@@ -23,9 +23,6 @@ namespace mob {
         //
         // mob doesn't have a concept of task dependencies, just task ordering, so
         // if a task depends on another, it has to be earlier in the order
-
-        // Add local MO tasks from INI
-        task_manager::instance().add_local_mo_tasks();
         
         // third-party tasks
 
@@ -116,6 +113,9 @@ namespace mob {
             .add_task<mo>("modorganizer-installer_wizard")
             .add_task<mo>("modorganizer-bsa_extractor")
             .add_task<mo>("modorganizer-plugin_python");
+
+        // Add local MO tasks from INI
+        task_manager::instance().add_local_mo_tasks();
 
         add_task<parallel_tasks>()
             .add_task<mo>({"modorganizer-tool_configurator", "pycfg"})
