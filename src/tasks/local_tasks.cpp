@@ -1,25 +1,13 @@
 #include "pch.h"
 #include "tasks.h"
 #include "../core/conf.h"
+#include "../tasks/task_manager.h"
 
 namespace mob::tasks {
 
     local_tasks::local_tasks(flags f)
         : task("local_tasks"), flags_(f)
     {
-    }
-
-    fs::path local_tasks::source_path()
-    {
-        // This is a static function, but we need to access instance data
-        // Since this is just a placeholder for basic_task, it's not actually used
-        static fs::path dummy;
-        return dummy;
-    }
-
-    bool local_tasks::prebuilt()
-    {
-        return false;
     }
 
     void local_tasks::do_clean(clean)
