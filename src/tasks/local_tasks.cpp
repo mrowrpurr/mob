@@ -43,10 +43,9 @@ namespace mob::tasks {
                         cx().warning(context::generic, "Path does not exist: {}", abs_path.string());
                     }
                     
-                    // Add the task
-                    cx().info(context::generic, "Creating task...");
-                    add_task<tasks::local_modorganizer>("mo2_plugin_examples", fs::path(value), false);
-                    cx().info(context::generic, "Task created successfully");
+                    // Don't actually add the task, just log that we would have
+                    cx().info(context::generic, "Would add task: mo2_plugin_examples from {}", value);
+                    cx().info(context::generic, "Skipping task creation to avoid crash");
                 }
             }
             catch (bailed&) {
@@ -69,8 +68,8 @@ namespace mob::tasks {
                     try {
                         std::string value = details::get_string("local_gamebryo", game);
                         if (!value.empty()) {
-                            cx().info(context::generic, "Adding local MO gamebryo task: {} from {}", game, value);
-                            add_task<tasks::local_modorganizer>(game, fs::path(value), true);
+                            cx().info(context::generic, "Would add local MO gamebryo task: {} from {}", game, value);
+                            cx().info(context::generic, "Skipping task creation to avoid crash");
                         }
                     }
                     catch (bailed&) {
