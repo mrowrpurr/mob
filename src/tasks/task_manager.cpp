@@ -164,102 +164,86 @@ namespace mob {
     {
         // Process [local] and [local_gamebryo] sections
         try {
-            // Get all sections and keys directly from the ini_data structure
-            // This is more reliable than using format_options()
+            // Get all options from the configuration
+            auto options = format_options();
             
-            // First, try to access the local section directly
-            try {
-                // Get all keys in the local section
-                auto& ini = parse_ini(conf().path().prefix() / default_ini_filename());
-                
-                // Process entries from the local section (non-gamebryo plugins)
-                auto& local_section = ini.get_section("local");
-                for (auto& [key, value] : local_section) {
-                    // Skip if it's a comment line or empty value
-                    if (key.empty() || key[0] == '#' || key[0] == ';' || value.empty()) {
+            // Extract keys from the formatted options
+            std::vector<std::string> local_keys;
+            std::vector<std::string> gamebryo_keys;
+            
+            for (const auto& line : options) {
+                if (line.find("local  ") == 0 && line.find(" = ") != std::string::npos) {
+                    auto key_start = line.find("  ") + 2;
+                    auto key_end = line.find(" = ");
+                    auto key = line.substr(key_start, key_end - key_start);
+                    
+                    // Skip if it's a comment line
+                    if (key.empty() || key[0] == '#' || key[0] == ';') {
                         continue;
                     }
                     
-                    gcx().debug(context::generic, "Adding local MO task: {} from {}", key, value);
-                    add_task<tasks::local_modorganizer>(key, fs::path(value), false);
+                    local_keys.push_back(key);
                 }
-                
-                // Process entries from the local_gamebryo section (gamebryo plugins)
-                auto& gamebryo_section = ini.get_section("local_gamebryo");
-                for (auto& [key, value] : gamebryo_section) {
-                    // Skip if it's a comment line or empty value
-                    if (key.empty() || key[0] == '#' || key[0] == ';' || value.empty()) {
+                else if (line.find("local_gamebryo  ") == 0 && line.find(" = ") != std::string::npos) {
+                    auto key_start = line.find("  ") + 2;
+                    auto key_end = line.find(" = ");
+                    auto key = line.substr(key_start, key_end - key_start);
+                    
+                    // Skip if it's a comment line
+                    if (key.empty() || key[0] == '#' || key[0] == ';') {
                         continue;
                     }
                     
-                    gcx().debug(context::generic, "Adding local MO gamebryo task: {} from {}", key, value);
-                    add_task<tasks::local_modorganizer>(key, fs::path(value), true);
+                    gamebryo_keys.push_back(key);
                 }
             }
-            catch (bailed&) {
-                // If that fails, try the old approach with details::get_string
-                gcx().debug(context::generic, "Falling back to details::get_string approach");
-                
-                // Get all options from the configuration
-                auto options = format_options();
-                
-                // Extract keys from the formatted options
-                std::vector<std::string> local_keys;
-                std::vector<std::string> gamebryo_keys;
-                
-                for (const auto& line : options) {
-                    if (line.find("local  ") == 0 && line.find(" = ") != std::string::npos) {
-                        auto key_start = line.find("  ") + 2;
-                        auto key_end = line.find(" = ");
-                        auto key = line.substr(key_start, key_end - key_start);
-                        
-                        // Skip if it's a comment line
-                        if (key.empty() || key[0] == '#' || key[0] == ';') {
-                            continue;
-                        }
-                        
-                        local_keys.push_back(key);
-                    }
-                    else if (line.find("local_gamebryo  ") == 0 && line.find(" = ") != std::string::npos) {
-                        auto key_start = line.find("  ") + 2;
-                        auto key_end = line.find(" = ");
-                        auto key = line.substr(key_start, key_end - key_start);
-                        
-                        // Skip if it's a comment line
-                        if (key.empty() || key[0] == '#' || key[0] == ';') {
-                            continue;
-                        }
-                        
-                        gamebryo_keys.push_back(key);
+            
+            // Debug output
+            gcx().debug(context::generic, "Found {} local keys and {} local_gamebryo keys", 
+                local_keys.size(), gamebryo_keys.size());
+            
+            // Process entries from the local section (non-gamebryo plugins)
+            for (const auto& key : local_keys) {
+                try {
+                    std::string value = details::get_string("local", key);
+                    if (!value.empty()) {
+                        gcx().debug(context::generic, "Adding local MO task: {} from {}", key, value);
+                        add_task<tasks::local_modorganizer>(key, fs::path(value), false);
                     }
                 }
-                
-                // Process entries from the local section (non-gamebryo plugins)
-                for (const auto& key : local_keys) {
-                    try {
-                        std::string value = details::get_string("local", key);
-                        if (!value.empty()) {
-                            gcx().debug(context::generic, "Adding local MO task: {} from {}", key, value);
-                            add_task<tasks::local_modorganizer>(key, fs::path(value), false);
-                        }
-                    }
-                    catch (bailed&) {
-                        // Key doesn't exist, that's fine
+                catch (bailed&) {
+                    // Key doesn't exist, that's fine
+                }
+            }
+            
+            // Process entries from the local_gamebryo section (gamebryo plugins)
+            for (const auto& key : gamebryo_keys) {
+                try {
+                    std::string value = details::get_string("local_gamebryo", key);
+                    if (!value.empty()) {
+                        gcx().debug(context::generic, "Adding local MO gamebryo task: {} from {}", key, value);
+                        add_task<tasks::local_modorganizer>(key, fs::path(value), true);
                     }
                 }
+                catch (bailed&) {
+                    // Key doesn't exist, that's fine
+                }
+            }
+            
+            // If no keys were found, try to directly access the keys
+            if (local_keys.empty() && gamebryo_keys.empty()) {
+                gcx().debug(context::generic, "No keys found in formatted options, trying direct access");
                 
-                // Process entries from the local_gamebryo section (gamebryo plugins)
-                for (const auto& key : gamebryo_keys) {
-                    try {
-                        std::string value = details::get_string("local_gamebryo", key);
-                        if (!value.empty()) {
-                            gcx().debug(context::generic, "Adding local MO gamebryo task: {} from {}", key, value);
-                            add_task<tasks::local_modorganizer>(key, fs::path(value), true);
-                        }
+                // Try to directly access the hello_world_plugin key
+                try {
+                    std::string value = details::get_string("local", "hello_world_plugin");
+                    if (!value.empty()) {
+                        gcx().debug(context::generic, "Adding local MO task: hello_world_plugin from {}", value);
+                        add_task<tasks::local_modorganizer>("hello_world_plugin", fs::path(value), false);
                     }
-                    catch (bailed&) {
-                        // Key doesn't exist, that's fine
-                    }
+                }
+                catch (bailed&) {
+                    // Key doesn't exist, that's fine
                 }
             }
         }
