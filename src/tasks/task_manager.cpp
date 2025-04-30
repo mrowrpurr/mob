@@ -164,47 +164,67 @@ namespace mob {
     {
         // Process [mo:local] and [mo:local:gamebryo] sections
         try {
-            // Access the configuration data structure directly
-            // This is the proper way to access all keys in a section
+            // We need to extract keys from the formatted options
+            // This is the only way to get all keys in a section without direct access to the internal data structure
+            auto options = format_options();
+            
+            // Extract keys from the formatted options
+            std::vector<std::string> local_keys;
+            std::vector<std::string> gamebryo_keys;
+            
+            for (const auto& line : options) {
+                if (line.find("mo:local  ") == 0 && line.find(" = ") != std::string::npos) {
+                    auto key_start = line.find("  ") + 2;
+                    auto key_end = line.find(" = ");
+                    auto key = line.substr(key_start, key_end - key_start);
+                    
+                    // Skip if it's a comment line
+                    if (key.empty() || key[0] == '#' || key[0] == ';') {
+                        continue;
+                    }
+                    
+                    local_keys.push_back(key);
+                }
+                else if (line.find("mo:local:gamebryo  ") == 0 && line.find(" = ") != std::string::npos) {
+                    auto key_start = line.find("  ") + 2;
+                    auto key_end = line.find(" = ");
+                    auto key = line.substr(key_start, key_end - key_start);
+                    
+                    // Skip if it's a comment line
+                    if (key.empty() || key[0] == '#' || key[0] == ';') {
+                        continue;
+                    }
+                    
+                    gamebryo_keys.push_back(key);
+                }
+            }
             
             // Process entries from the mo:local section (non-gamebryo plugins)
-            try {
-                auto sitor = details::g_conf.find("mo:local");
-                if (sitor != details::g_conf.end()) {
-                    // Iterate through all keys in the section
-                    for (auto&& [key, value] : sitor->second) {
-                        // Skip empty values or comment-only values
-                        if (value.empty() || value[0] == '#' || value[0] == ';') {
-                            continue;
-                        }
-                        
+            for (const auto& key : local_keys) {
+                try {
+                    std::string value = details::get_string("mo:local", key);
+                    if (!value.empty()) {
                         gcx().debug(context::generic, "Adding local MO task: {} from {}", key, value);
                         add_task<tasks::local_modorganizer>(key, fs::path(value), false);
                     }
                 }
-            }
-            catch (bailed&) {
-                // Section doesn't exist or is empty, that's fine
+                catch (bailed&) {
+                    // Key doesn't exist, that's fine
+                }
             }
             
             // Process entries from the mo:local:gamebryo section (gamebryo plugins)
-            try {
-                auto sitor = details::g_conf.find("mo:local:gamebryo");
-                if (sitor != details::g_conf.end()) {
-                    // Iterate through all keys in the section
-                    for (auto&& [key, value] : sitor->second) {
-                        // Skip empty values or comment-only values
-                        if (value.empty() || value[0] == '#' || value[0] == ';') {
-                            continue;
-                        }
-                        
+            for (const auto& key : gamebryo_keys) {
+                try {
+                    std::string value = details::get_string("mo:local:gamebryo", key);
+                    if (!value.empty()) {
                         gcx().debug(context::generic, "Adding local MO gamebryo task: {} from {}", key, value);
                         add_task<tasks::local_modorganizer>(key, fs::path(value), true);
                     }
                 }
-            }
-            catch (bailed&) {
-                // Section doesn't exist or is empty, that's fine
+                catch (bailed&) {
+                    // Key doesn't exist, that's fine
+                }
             }
         }
         catch (std::exception& e) {
