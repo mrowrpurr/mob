@@ -164,102 +164,69 @@ namespace mob {
     {
         // Process [local] and [local_gamebryo] sections
         try {
-            // We need to extract keys from the formatted options
-            // This is the only way to get all keys in a section without direct access to the internal data structure
-            auto options = format_options();
-            
-            // Add debug output to see all options
-            gcx().info(context::generic, "Formatted options count: {}", options.size());
-            for (const auto& line : options) {
-                gcx().info(context::generic, "Option line: {}", line);
-            }
-            
-            // Extract keys from the formatted options
-            std::vector<std::string> local_keys;
-            std::vector<std::string> gamebryo_keys;
-            
-            for (const auto& line : options) {
-                // Debug output for each line containing "local"
-                if (line.find("local") != std::string::npos) {
-                    gcx().info(context::generic, "Found line with 'local': {}", line);
-                }
+            // Try to directly access the local section
+            gcx().info(context::generic, "Trying to directly access [local] section");
+            try {
+                std::string value = details::get_string("local", "hello_world_plugin");
+                gcx().info(context::generic, "Direct access to [local]/hello_world_plugin: '{}'", value);
                 
-                if (line.find("local  ") == 0 && line.find(" = ") != std::string::npos) {
-                    auto key_start = line.find("  ") + 2;
-                    auto key_end = line.find(" = ");
-                    auto key = line.substr(key_start, key_end - key_start);
-                    
-                    // Skip if it's a comment line
-                    if (key.empty() || key[0] == '#' || key[0] == ';') {
-                        continue;
-                    }
-                    
-                    gcx().info(context::generic, "Found local key: {}", key);
-                    local_keys.push_back(key);
+                if (!value.empty()) {
+                    gcx().info(context::generic, "Adding local MO task: hello_world_plugin from {}", value);
+                    add_task<tasks::local_modorganizer>("hello_world_plugin", fs::path(value), false);
                 }
-                else if (line.find("local_gamebryo  ") == 0 && line.find(" = ") != std::string::npos) {
-                    auto key_start = line.find("  ") + 2;
-                    auto key_end = line.find(" = ");
-                    auto key = line.substr(key_start, key_end - key_start);
-                    
-                    // Skip if it's a comment line
-                    if (key.empty() || key[0] == '#' || key[0] == ';') {
-                        continue;
-                    }
-                    
-                    gcx().info(context::generic, "Found local_gamebryo key: {}", key);
-                    gamebryo_keys.push_back(key);
+                else {
+                    gcx().info(context::generic, "Value for hello_world_plugin is empty");
+                }
+            }
+            catch (bailed&) {
+                gcx().info(context::generic, "Bailed when trying to access [local]/hello_world_plugin");
+            }
+            catch (std::exception& e) {
+                gcx().info(context::generic, "Exception when accessing [local]/hello_world_plugin: {}", e.what());
+            }
+            
+            // Try to directly access the local_gamebryo section
+            gcx().info(context::generic, "Trying to directly access [local_gamebryo] section");
+            try {
+                std::string value = details::get_string("local_gamebryo", "game_customgame");
+                gcx().info(context::generic, "Direct access to [local_gamebryo]/game_customgame: '{}'", value);
+            }
+            catch (bailed&) {
+                gcx().info(context::generic, "Bailed when trying to access [local_gamebryo]/game_customgame");
+            }
+            catch (std::exception& e) {
+                gcx().info(context::generic, "Exception when accessing [local_gamebryo]/game_customgame: {}", e.what());
+            }
+            
+            // Debug the format_options function
+            auto options = format_options();
+            gcx().info(context::generic, "Formatted options count: {}", options.size());
+            
+            // Only print the first 10 lines to avoid flooding the log
+            for (size_t i = 0; i < std::min(options.size(), size_t(10)); ++i) {
+                gcx().info(context::generic, "Option line {}: {}", i, options[i]);
+            }
+            
+            // Check if there are more lines
+            if (options.size() > 10) {
+                gcx().info(context::generic, "... and {} more lines", options.size() - 10);
+            }
+            
+            // Try to find any lines containing "local" or "hello"
+            for (const auto& line : options) {
+                if (line.find("local") != std::string::npos || line.find("hello") != std::string::npos) {
+                    gcx().info(context::generic, "Found relevant line: {}", line);
                 }
             }
             
-            // Debug output for keys found
-            gcx().info(context::generic, "Local keys count: {}", local_keys.size());
-            gcx().info(context::generic, "Local_gamebryo keys count: {}", gamebryo_keys.size());
-            
-            // Process entries from the local section (non-gamebryo plugins)
-            for (const auto& key : local_keys) {
-                try {
-                    std::string value = details::get_string("local", key);
-                    gcx().info(context::generic, "Local key '{}' value: '{}'", key, value);
-                    
-                    if (!value.empty()) {
-                        gcx().info(context::generic, "Adding local MO task: {} from {}", key, value);
-                        add_task<tasks::local_modorganizer>(key, fs::path(value), false);
-                    }
-                    else {
-                        gcx().info(context::generic, "Skipping local key '{}' because value is empty", key);
-                    }
-                }
-                catch (bailed&) {
-                    // Key doesn't exist, that's fine
-                    gcx().info(context::generic, "Bailed when getting value for local key '{}'", key);
-                }
-                catch (std::exception& e) {
-                    gcx().info(context::generic, "Exception when processing local key '{}': {}", key, e.what());
-                }
+            // Try to manually add the task
+            gcx().info(context::generic, "Manually adding hello_world_plugin task");
+            try {
+                add_task<tasks::local_modorganizer>("hello_world_plugin", fs::path("..\\cpp_examples\\hello_world_plugin"), false);
+                gcx().info(context::generic, "Successfully added hello_world_plugin task manually");
             }
-            
-            // Process entries from the local_gamebryo section (gamebryo plugins)
-            for (const auto& key : gamebryo_keys) {
-                try {
-                    std::string value = details::get_string("local_gamebryo", key);
-                    gcx().info(context::generic, "Local_gamebryo key '{}' value: '{}'", key, value);
-                    
-                    if (!value.empty()) {
-                        gcx().info(context::generic, "Adding local MO gamebryo task: {} from {}", key, value);
-                        add_task<tasks::local_modorganizer>(key, fs::path(value), true);
-                    }
-                    else {
-                        gcx().info(context::generic, "Skipping local_gamebryo key '{}' because value is empty", key);
-                    }
-                }
-                catch (bailed&) {
-                    // Key doesn't exist, that's fine
-                    gcx().info(context::generic, "Bailed when getting value for local_gamebryo key '{}'", key);
-                }
-                catch (std::exception& e) {
-                    gcx().info(context::generic, "Exception when processing local_gamebryo key '{}': {}", key, e.what());
-                }
+            catch (std::exception& e) {
+                gcx().info(context::generic, "Exception when manually adding hello_world_plugin task: {}", e.what());
             }
         }
         catch (std::exception& e) {
