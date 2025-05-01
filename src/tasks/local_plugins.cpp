@@ -4,8 +4,77 @@
 #include "../core/conf.h"
 #include "../core/ini.h"
 #include "../core/op.h"
+#include "../core/paths.h"
 #include "../core/process.h"
 #include "../tools/tools.h"
+#include "../utility/fs.h"
+
+namespace mob {
+    // Global container for local plugins
+    static std::map<std::string, fs::path> g_local_plugins;
+    
+    // Initialize the global container from the INI file
+    void init_local_plugins()
+    {
+        // Clear the container first
+        g_local_plugins.clear();
+        
+        // Find all INI files
+        std::vector<fs::path> ini_files;
+        
+        // First, try to find the master INI file
+        fs::path master_ini = find_in_root(default_ini_filename());
+        if (fs::exists(master_ini)) {
+            ini_files.push_back(master_ini);
+        }
+        
+        // Then, try to find an INI file in the current directory
+        fs::path current_ini = fs::current_path() / default_ini_filename();
+        if (fs::exists(current_ini) && !fs::equivalent(current_ini, master_ini)) {
+            ini_files.push_back(current_ini);
+        }
+        
+        // Process each INI file
+        for (const auto& ini_path : ini_files) {
+            // Parse the INI file
+            const auto data = parse_ini(ini_path);
+            
+            // Find the local_plugins section
+            for (const auto& [section_name, section_data] : data.sections) {
+                if (section_name == "local_plugins") {
+                    // Process each entry in the section
+                    for (const auto& [name, path_str] : section_data) {
+                        // Skip comments
+                        if (name.starts_with("#")) {
+                            continue;
+                        }
+                        
+                        fs::path plugin_path = fs::path(path_str);
+                        
+                        // Store the plugin path
+                        g_local_plugins[name] = plugin_path;
+                    }
+                }
+            }
+        }
+        
+        // No fallbacks - only use what's in the INI file
+        if (g_local_plugins.empty()) {
+            gcx().debug(context::generic, "No local plugins found in INI files");
+        }
+    }
+    
+    // Get the local plugins
+    std::map<std::string, fs::path> get_local_plugins()
+    {
+        // Initialize if empty
+        if (g_local_plugins.empty()) {
+            init_local_plugins();
+        }
+        
+        return g_local_plugins;
+    }
+}
 
 namespace mob::tasks {
 
@@ -76,33 +145,18 @@ namespace mob::tasks {
 
     std::map<std::string, fs::path> local_plugins::read_local_plugins()
     {
-        std::map<std::string, fs::path> plugins;
-
-        // Get the local_plugins section from the already loaded INI files
-        auto section = conf().get_section("local_plugins");
+        // Get the local plugins from the global container
+        auto plugins = get_local_plugins();
         
-        // Process each entry in the section
-        for (const auto& [name, path_str] : section) {
-            // Skip comments
-            if (name.starts_with("#")) {
-                continue;
-            }
-            
-            fs::path plugin_path = fs::path(path_str);
-            
-            // Check if the path exists
-            if (fs::exists(plugin_path)) {
-                plugins[name] = plugin_path;
-                cx().info(context::generic, "found local plugin: {} at {}", name, path_to_utf8(plugin_path));
+        // Log the plugins found
+        for (const auto& [name, path] : plugins) {
+            if (fs::exists(path)) {
+                cx().info(context::generic, "found local plugin: {} at {}", name, path_to_utf8(path));
             } else {
-                cx().warning(context::generic, "local plugin path does not exist: {}", path_to_utf8(plugin_path));
+                cx().warning(context::generic, "local plugin path does not exist: {}", path_to_utf8(path));
             }
         }
         
-        if (plugins.empty()) {
-            cx().warning(context::generic, "no local plugins found in INI files");
-        }
-
         return plugins;
     }
 
