@@ -723,6 +723,9 @@ namespace mob::tasks {
         void do_build_and_install() override;
 
     private:
+        // Register each local plugin as a separate task
+        void register_plugin_tasks();
+        
         // Read local_plugins section from INI
         std::map<std::string, fs::path> read_local_plugins();
         

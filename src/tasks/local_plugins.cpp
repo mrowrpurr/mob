@@ -10,6 +10,28 @@ namespace mob::tasks {
 
     local_plugins::local_plugins() : task("local_plugins")
     {
+        // Register each local plugin as a separate task
+        register_plugin_tasks();
+    }
+    
+    void local_plugins::register_plugin_tasks()
+    {
+        // Get the list of local plugins
+        auto plugins = read_local_plugins();
+        
+        // Log the number of plugins found
+        cx().info(context::generic, "found {} local plugins to register", plugins.size());
+        
+        // For each plugin, create a modorganizer task and register it
+        for (const auto& [name, path] : plugins) {
+            // Determine if this is a gamebryo plugin based on the name
+            modorganizer::flags flags = modorganizer::noflags;
+            if (name.find("gamebryo") == 0) {
+                flags = modorganizer::gamebryo;
+            }
+            
+            add_task<modorganizer>(name, path, flags);
+        }
     }
 
     fs::path local_plugins::source_path()
@@ -55,22 +77,12 @@ namespace mob::tasks {
     {
         std::map<std::string, fs::path> plugins;
 
-        // Get the local_plugins section from the INI
         auto section = conf().get_section("local_plugins");
         
-        // For each key-value pair, add to the plugins map
-        for (const auto& [name, path_str] : section) {
-            fs::path plugin_path = fs::path(path_str);
-            
-            // Check if the path exists
-            if (!fs::exists(plugin_path)) {
-                cx().warning(context::generic, "local plugin path does not exist: {}", path_str);
-                continue;
-            }
-            
-            // Add to the map
+        if (fs::exists(plugin_path)) {
             plugins[name] = plugin_path;
-            cx().debug(context::generic, "found local plugin: {} at {}", name, path_str);
+        } else {
+            cx().warning(context::generic, "local plugin path does not exist: {}", path_to_utf8(plugin_path));
         }
 
         return plugins;
