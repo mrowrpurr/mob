@@ -19,43 +19,20 @@ namespace mob {
         // Clear the container first
         g_local_plugins.clear();
         
-        // Find all INI files
-        std::vector<fs::path> ini_files;
+        // Get the local_plugins section from the already loaded INI files
+        auto section = conf().get_section("local_plugins");
         
-        // First, try to find the master INI file
-        fs::path master_ini = find_in_root(default_ini_filename());
-        if (fs::exists(master_ini)) {
-            ini_files.push_back(master_ini);
-        }
-        
-        // Then, try to find an INI file in the current directory
-        fs::path current_ini = fs::current_path() / default_ini_filename();
-        if (fs::exists(current_ini) && !fs::equivalent(current_ini, master_ini)) {
-            ini_files.push_back(current_ini);
-        }
-        
-        // Process each INI file
-        for (const auto& ini_path : ini_files) {
-            // Parse the INI file
-            const auto data = parse_ini(ini_path);
-            
-            // Find the local_plugins section
-            for (const auto& [section_name, section_data] : data.sections) {
-                if (section_name == "local_plugins") {
-                    // Process each entry in the section
-                    for (const auto& [name, path_str] : section_data) {
-                        // Skip comments
-                        if (name.starts_with("#")) {
-                            continue;
-                        }
-                        
-                        fs::path plugin_path = fs::path(path_str);
-                        
-                        // Store the plugin path
-                        g_local_plugins[name] = plugin_path;
-                    }
-                }
+        // Process each entry in the section
+        for (const auto& [name, path_str] : section) {
+            // Skip comments
+            if (name.starts_with("#")) {
+                continue;
             }
+            
+            fs::path plugin_path = fs::path(path_str);
+            
+            // Store the plugin path
+            g_local_plugins[name] = plugin_path;
         }
         
         // No fallbacks - only use what's in the INI file
