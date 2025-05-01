@@ -279,6 +279,10 @@ namespace mob::tasks {
         // "build/modorganizer_super/modorganizer"
         //
         fs::path source_path() const;
+        
+        // Build the project using a custom generator (e.g., Ninja)
+        // This is used by local_plugins to build local plugins with Ninja
+        void build_with_custom_generator(cmake::generators generator);
 
     protected:
         void do_clean(clean c) override;

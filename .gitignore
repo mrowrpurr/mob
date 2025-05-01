@@ -1,5 +1,5 @@
 # mob-specific files
-/build
+/build/
 /vs/obj
 /vs/.vs
 /vs/*.user
@@ -7,9 +7,25 @@
 /mob.log
 
 # Files built by mob
-/*/build
 /*/downloads
 /*/install
 /*/releases
 /*/mob.ini
 /*/mob.log
+
+build
+vsbuild
+ninja_build
+prefix/path/build/
+
+*.7z
+*.dll
+*.exe
+*.lib
+*.pdb
+*.ilk
+install
+modorganizer_super
+build
+prefix
+.cache

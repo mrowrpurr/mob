@@ -19,7 +19,10 @@ namespace mob {
             vs = 0x01,
 
             // generates build files for jom/nmake
-            jom = 0x02
+            jom = 0x02,
+            
+            // generates build files for ninja (supports compile_commands.json)
+            ninja = 0x04
         };
         using enum generators;
 

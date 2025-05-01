@@ -1,0 +1,188 @@
+[submodule "uibase"]
+	path = prefix/path/build/modorganizer_super/uibase
+	url = https://github.com/ModOrganizer2/modorganizer-uibase.git
+	branch = master
+[submodule "cmake_common"]
+	path = prefix/path/build/modorganizer_super/cmake_common
+	url = https://github.com/ModOrganizer2/cmake_common.git
+	branch = master
+[submodule "archive"]
+	path = prefix/path/build/modorganizer_super/archive
+	url = https://github.com/ModOrganizer2/modorganizer-archive.git
+	branch = master
+[submodule "githubpp"]
+	path = prefix/path/build/modorganizer_super/githubpp
+	url = https://github.com/ModOrganizer2/githubpp.git
+	branch = master
+[submodule "bsatk"]
+	path = prefix/path/build/modorganizer_super/bsatk
+	url = https://github.com/ModOrganizer2/modorganizer-bsatk.git
+	branch = master
+[submodule "game_gamebryo"]
+	path = prefix/path/build/modorganizer_super/game_gamebryo
+	url = https://github.com/ModOrganizer2/modorganizer-game_gamebryo.git
+	branch = master
+[submodule "bsapacker"]
+	path = prefix/path/build/modorganizer_super/bsapacker
+	url = https://github.com/ModOrganizer2/modorganizer-bsapacker.git
+	branch = master
+[submodule "esptk"]
+	path = prefix/path/build/modorganizer_super/esptk
+	url = https://github.com/ModOrganizer2/modorganizer-esptk.git
+	branch = master
+[submodule "helper"]
+	path = prefix/path/build/modorganizer_super/helper
+	url = https://github.com/ModOrganizer2/modorganizer-helper.git
+	branch = master
+[submodule "preview_bsa"]
+	path = prefix/path/build/modorganizer_super/preview_bsa
+	url = https://github.com/ModOrganizer2/modorganizer-preview_bsa.git
+	branch = master
+[submodule "lootcli"]
+	path = prefix/path/build/modorganizer_super/lootcli
+	url = https://github.com/ModOrganizer2/modorganizer-lootcli.git
+	branch = master
+[submodule "nxmhandler"]
+	path = prefix/path/build/modorganizer_super/nxmhandler
+	url = https://github.com/ModOrganizer2/modorganizer-nxmhandler.git
+	branch = master
+[submodule "game_enderalse"]
+	path = prefix/path/build/modorganizer_super/game_enderalse
+	url = https://github.com/ModOrganizer2/modorganizer-game_enderalse.git
+	branch = master
+[submodule "game_ttw"]
+	path = prefix/path/build/modorganizer_super/game_ttw
+	url = https://github.com/ModOrganizer2/modorganizer-game_ttw.git
+	branch = master
+[submodule "game_skyrim"]
+	path = prefix/path/build/modorganizer_super/game_skyrim
+	url = https://github.com/ModOrganizer2/modorganizer-game_skyrim.git
+	branch = master
+[submodule "game_falloutnv"]
+	path = prefix/path/build/modorganizer_super/game_falloutnv
+	url = https://github.com/ModOrganizer2/modorganizer-game_falloutnv.git
+	branch = master
+[submodule "game_fallout76"]
+	path = prefix/path/build/modorganizer_super/game_fallout76
+	url = https://github.com/ModOrganizer2/modorganizer-game_fallout76.git
+	branch = master
+[submodule "game_starfield"]
+	path = prefix/path/build/modorganizer_super/game_starfield
+	url = https://github.com/ModOrganizer2/modorganizer-game_starfield.git
+	branch = master
+[submodule "game_fallout4vr"]
+	path = prefix/path/build/modorganizer_super/game_fallout4vr
+	url = https://github.com/ModOrganizer2/modorganizer-game_fallout4vr.git
+	branch = master
+[submodule "game_fallout4"]
+	path = prefix/path/build/modorganizer_super/game_fallout4
+	url = https://github.com/ModOrganizer2/modorganizer-game_fallout4.git
+	branch = master
+[submodule "game_morrowind"]
+	path = prefix/path/build/modorganizer_super/game_morrowind
+	url = https://github.com/ModOrganizer2/modorganizer-game_morrowind.git
+	branch = master
+[submodule "game_enderal"]
+	path = prefix/path/build/modorganizer_super/game_enderal
+	url = https://github.com/ModOrganizer2/modorganizer-game_enderal.git
+	branch = master
+[submodule "game_skyrimse"]
+	path = prefix/path/build/modorganizer_super/game_skyrimse
+	url = https://github.com/ModOrganizer2/modorganizer-game_skyrimse.git
+	branch = master
+[submodule "game_skyrimvr"]
+	path = prefix/path/build/modorganizer_super/game_skyrimvr
+	url = https://github.com/ModOrganizer2/modorganizer-game_skyrimvr.git
+	branch = master
+[submodule "game_oblivion"]
+	path = prefix/path/build/modorganizer_super/game_oblivion
+	url = https://github.com/ModOrganizer2/modorganizer-game_oblivion.git
+	branch = master
+[submodule "game_nehrim"]
+	path = prefix/path/build/modorganizer_super/game_nehrim
+	url = https://github.com/ModOrganizer2/modorganizer-game_nehrim.git
+	branch = master
+[submodule "game_fallout3"]
+	path = prefix/path/build/modorganizer_super/game_fallout3
+	url = https://github.com/ModOrganizer2/modorganizer-game_fallout3.git
+	branch = master
+[submodule "installer_quick"]
+	path = prefix/path/build/modorganizer_super/installer_quick
+	url = https://github.com/ModOrganizer2/modorganizer-installer_quick.git
+	branch = master
+[submodule "installer_fomod_csharp"]
+	path = prefix/path/build/modorganizer_super/installer_fomod_csharp
+	url = https://github.com/ModOrganizer2/modorganizer-installer_fomod_csharp.git
+	branch = master
+[submodule "installer_omod"]
+	path = prefix/path/build/modorganizer_super/installer_omod
+	url = https://github.com/ModOrganizer2/modorganizer-installer_omod.git
+	branch = master
+[submodule "installer_bundle"]
+	path = prefix/path/build/modorganizer_super/installer_bundle
+	url = https://github.com/ModOrganizer2/modorganizer-installer_bundle.git
+	branch = master
+[submodule "check_fnis"]
+	path = prefix/path/build/modorganizer_super/check_fnis
+	url = https://github.com/ModOrganizer2/modorganizer-check_fnis.git
+	branch = master
+[submodule "diagnose_basic"]
+	path = prefix/path/build/modorganizer_super/diagnose_basic
+	url = https://github.com/ModOrganizer2/modorganizer-diagnose_basic.git
+	branch = master
+[submodule "tool_inibakery"]
+	path = prefix/path/build/modorganizer_super/tool_inibakery
+	url = https://github.com/ModOrganizer2/modorganizer-tool_inibakery.git
+	branch = master
+[submodule "installer_manual"]
+	path = prefix/path/build/modorganizer_super/installer_manual
+	url = https://github.com/ModOrganizer2/modorganizer-installer_manual.git
+	branch = master
+[submodule "plugin_python"]
+	path = prefix/path/build/modorganizer_super/plugin_python
+	url = https://github.com/ModOrganizer2/modorganizer-plugin_python.git
+	branch = master
+[submodule "installer_wizard"]
+	path = prefix/path/build/modorganizer_super/installer_wizard
+	url = https://github.com/ModOrganizer2/modorganizer-installer_wizard.git
+	branch = master
+[submodule "preview_base"]
+	path = prefix/path/build/modorganizer_super/preview_base
+	url = https://github.com/ModOrganizer2/modorganizer-preview_base.git
+	branch = master
+[submodule "installer_bain"]
+	path = prefix/path/build/modorganizer_super/installer_bain
+	url = https://github.com/ModOrganizer2/modorganizer-installer_bain.git
+	branch = master
+[submodule "installer_fomod"]
+	path = prefix/path/build/modorganizer_super/installer_fomod
+	url = https://github.com/ModOrganizer2/modorganizer-installer_fomod.git
+	branch = master
+[submodule "tool_inieditor"]
+	path = prefix/path/build/modorganizer_super/tool_inieditor
+	url = https://github.com/ModOrganizer2/modorganizer-tool_inieditor.git
+	branch = master
+[submodule "bsa_extractor"]
+	path = prefix/path/build/modorganizer_super/bsa_extractor
+	url = https://github.com/ModOrganizer2/modorganizer-bsa_extractor.git
+	branch = master
+[submodule "preview_dds"]
+	path = prefix/path/build/modorganizer_super/preview_dds
+	url = https://github.com/ModOrganizer2/modorganizer-preview_dds.git
+	branch = master
+[submodule "form43_checker"]
+	path = prefix/path/build/modorganizer_super/form43_checker
+	url = https://github.com/ModOrganizer2/modorganizer-form43_checker.git
+	branch = master
+[submodule "basic_games"]
+	path = prefix/path/build/modorganizer_super/basic_games
+	url = https://github.com/ModOrganizer2/modorganizer-basic_games.git
+	branch = master
+[submodule "tool_configurator"]
+	path = prefix/path/build/modorganizer_super/tool_configurator
+	url = https://github.com/ModOrganizer2/modorganizer-tool_configurator.git
+	branch = master
+[submodule "fnistool"]
+	path = prefix/path/build/modorganizer_super/fnistool
+	url = https://github.com/ModOrganizer2/modorganizer-fnistool.git
+	branch = master

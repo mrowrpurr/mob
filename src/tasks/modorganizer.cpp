@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "tasks.h"
+#include "../core/process.h"
 
 namespace mob::tasks {
 
@@ -257,6 +258,53 @@ namespace mob::tasks {
                              .solution(project_file_path())
                              .configuration(task_conf().configuration())
                              .architecture(arch::x64));
+    }
+    
+    void modorganizer::build_with_custom_generator(cmake::generators generator)
+    {
+        // Create a custom cmake tool with the specified generator
+        auto custom_cmake = create_cmake_tool(cmake::generate);
+        
+        // Override the generator
+        custom_cmake.generator(generator);
+        
+        // Enable compile_commands.json generation if using Ninja
+        if (generator == cmake::ninja) {
+            custom_cmake.def("CMAKE_EXPORT_COMPILE_COMMANDS", "ON")
+                       .def("ENABLE_TRANSLATIONS", "OFF");
+            cx().debug(context::generic, "using Ninja generator with compile_commands.json for {}", name());
+        }
+        
+        // Run the custom cmake tool
+        run_tool(custom_cmake);
+        
+        // Run the appropriate build tool based on the generator
+        if (generator == cmake::ninja) {
+            // Get the ninja path from the configuration
+            auto ninja_path = conf().tool().get("ninja");
+            if (ninja_path.empty()) {
+                ninja_path = "ninja"; // Assume ninja is in PATH if not configured
+            }
+            
+            // Create and run the ninja process
+            auto p = process()
+                .binary(ninja_path)
+                .arg("install")
+                .cwd(custom_cmake.build_path());
+            
+            p.set_context(&cx());
+            p.run_and_join();
+            
+            cx().info(context::generic, "ninja build completed for {}", name());
+        } else if (generator == cmake::jom) {
+            // For jom, we would run jom here
+            // This is just a placeholder for future expansion
+            cx().bail_out(context::generic, "jom generator not yet supported for custom builds");
+        } else {
+            // For Visual Studio, we would run msbuild here
+            // This is just a placeholder for future expansion
+            cx().bail_out(context::generic, "Visual Studio generator not yet supported for custom builds");
+        }
     }
 
 }  // namespace mob::tasks

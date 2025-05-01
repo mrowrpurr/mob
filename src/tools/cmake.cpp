@@ -177,7 +177,10 @@ namespace mob {
 
             {generators::vs,
              {"vsbuild", "Visual Studio " + vs::version() + " " + vs::year(), "Win32",
-              "x64"}}};
+              "x64"}},
+              
+            // ninja doesn't need -A for architectures
+            {generators::ninja, {"ninja_build", "Ninja", "", ""}}};
 
         return map;
     }

@@ -123,18 +123,15 @@ namespace mob::tasks {
                 continue;
             }
             
-            // Determine if this is a gamebryo plugin based on the name
-            modorganizer::flags flags = modorganizer::noflags;
-            if (name.find("game_") == 0 || name.find("modorganizer-game_") == 0) {
-                flags = modorganizer::gamebryo;
-                cx().debug(context::generic, "detected gamebryo plugin: {}", name);
-            }
+            // Use the modorganizer task to build the plugin
+            cx().info(context::generic, "using modorganizer task to build {}", name);
             
             // Create a modorganizer task for this plugin
-            modorganizer mo_task(name, path, flags);
+            modorganizer mo_task(name, path, modorganizer::noflags);
             
-            // Run the task
+            // Build the plugin using the modorganizer task
             mo_task.run();
+            // No cleanup needed
         }
     }
 
