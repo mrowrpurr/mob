@@ -358,12 +358,8 @@ namespace mob::tasks {
         
         cx().info(context::generic, "generating compile_commands.json for {}", name());
         
-        // Instead of using Ninja, we'll use Visual Studio with CMAKE_EXPORT_COMPILE_COMMANDS=ON
-        auto vs_cmake = create_cmake_tool(cmake::generate);
-        
-        // Configure for Visual Studio with compile_commands.json
-        vs_cmake.generator(cmake::vs)
-               .def("CMAKE_EXPORT_COMPILE_COMMANDS", "ON");
+        // Create a custom cmake tool with Ninja generator specifically for compile_commands.json
+        auto ninja_cmake = create_cmake_tool(cmake::generate);
         
         // Create ninja_build directory for the compile_commands.json file
         fs::path source_dir = is_local_plugin() ? local_path_ : source_path();
@@ -380,20 +376,32 @@ namespace mob::tasks {
             fs::create_directories(ninja_build_path);
         }
         
+        // Configure for Ninja with compile_commands.json
+        ninja_cmake.generator(cmake::ninja)
+                  .def("CMAKE_EXPORT_COMPILE_COMMANDS", "ON")
+                  .def("ENABLE_TRANSLATIONS", "OFF")
+                  .def("TRANSLATIONS_DISABLED", "ON")
+                  .def("CMAKE_C_COMPILER", "cl.exe")
+                  .def("CMAKE_CXX_COMPILER", "cl.exe")
+                  .output(ninja_build_path);  // Set the output directory explicitly
+        
         // Run CMake configuration only (no build)
         try {
-            cx().info(context::generic, "running CMake with Visual Studio for compile_commands.json...");
-            run_tool(vs_cmake);
+            cx().info(context::generic, "running CMake with Ninja for compile_commands.json...");
             
-            // Get the path to the compile_commands.json file
-            auto vs_build_path = vs_cmake.build_path();
-            auto compile_commands_path = vs_build_path / "compile_commands.json";
+            // Get the ninja path from the configuration
+            auto ninja_path = conf().tool().get("ninja");
+            if (ninja_path.empty()) {
+                ninja_path = "ninja"; // Assume ninja is in PATH if not configured
+            }
             
+            // Run the CMake configuration
+            run_tool(ninja_cmake);
+            
+            // Check if compile_commands.json was generated
+            auto compile_commands_path = ninja_build_path / "compile_commands.json";
             if (fs::exists(compile_commands_path)) {
-                // Copy the compile_commands.json file to the ninja_build directory
-                cx().info(context::generic, "copying compile_commands.json to {}", path_to_utf8(ninja_build_path));
-                fs::copy_file(compile_commands_path, ninja_build_path / "compile_commands.json", fs::copy_options::overwrite_existing);
-                cx().info(context::generic, "compile_commands.json generated at {}/compile_commands.json", path_to_utf8(ninja_build_path));
+                cx().info(context::generic, "compile_commands.json generated at {}", path_to_utf8(compile_commands_path));
             } else {
                 cx().warning(context::generic, "compile_commands.json not found at {}", path_to_utf8(compile_commands_path));
             }
