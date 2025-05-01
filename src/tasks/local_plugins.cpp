@@ -79,10 +79,14 @@ namespace mob::tasks {
 
         auto section = conf().get_section("local_plugins");
         
-        if (fs::exists(plugin_path)) {
-            plugins[name] = plugin_path;
-        } else {
-            cx().warning(context::generic, "local plugin path does not exist: {}", path_to_utf8(plugin_path));
+        for (const auto& [name, path_str] : section) {
+            fs::path plugin_path = fs::path(path_str);
+            
+            if (fs::exists(plugin_path)) {
+                plugins[name] = plugin_path;
+            } else {
+                cx().warning(context::generic, "local plugin path does not exist: {}", path_to_utf8(plugin_path));
+            }
         }
 
         return plugins;
