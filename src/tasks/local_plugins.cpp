@@ -2,6 +2,7 @@
 #include "tasks.h"
 #include "task_manager.h"
 #include "../core/conf.h"
+#include "../core/ini.h"
 #include "../core/op.h"
 #include "../core/process.h"
 #include "../tools/tools.h"
@@ -77,16 +78,40 @@ namespace mob::tasks {
     {
         std::map<std::string, fs::path> plugins;
 
-        auto section = conf().get_section("local_plugins");
-        
-        for (const auto& [name, path_str] : section) {
-            fs::path plugin_path = fs::path(path_str);
+        // Read the INI file directly
+        fs::path ini_path = "mob.ini";
+        if (fs::exists(ini_path)) {
+            const auto data = parse_ini(ini_path);
             
-            if (fs::exists(plugin_path)) {
-                plugins[name] = plugin_path;
-            } else {
-                cx().warning(context::generic, "local plugin path does not exist: {}", path_to_utf8(plugin_path));
+            // Find the local_plugins section
+            for (const auto& [section_name, section_data] : data.sections) {
+                if (section_name == "local_plugins") {
+                    // Process each entry in the section
+                    for (const auto& [name, path_str] : section_data) {
+                        // Skip comments
+                        if (name.starts_with("#")) {
+                            continue;
+                        }
+                        
+                        fs::path plugin_path = fs::path(path_str);
+                        
+                        // Check if the path exists
+                        if (fs::exists(plugin_path)) {
+                            plugins[name] = plugin_path;
+                            cx().info(context::generic, "found local plugin: {} at {}", name, path_to_utf8(plugin_path));
+                        } else {
+                            cx().warning(context::generic, "local plugin path does not exist: {}", path_to_utf8(plugin_path));
+                        }
+                    }
+                    break; // Found the section, no need to continue
+                }
             }
+            
+            if (plugins.empty()) {
+                cx().warning(context::generic, "no [local_plugins] section found in mob.ini or section is empty");
+            }
+        } else {
+            cx().warning(context::generic, "mob.ini not found");
         }
 
         return plugins;
