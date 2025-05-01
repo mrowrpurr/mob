@@ -129,9 +129,43 @@ namespace mob::tasks {
             // Create a modorganizer task for this plugin
             modorganizer mo_task(name, path, modorganizer::noflags);
             
-            // Build the plugin using the modorganizer task
-            mo_task.run();
-            // No cleanup needed
+            // Check for generator configuration in mob.ini
+            auto cmake_section = conf().get_section("cmake");
+            std::string generator_str = cmake_section["local_plugins_generator"];
+            if (generator_str.empty()) {
+                // Fall back to the default generator setting
+                generator_str = cmake_section["generator"];
+            }
+            
+            // Convert the generator string to the appropriate enum value
+            cmake::generators generator = cmake::vs; // Default to Visual Studio
+            
+            if (!generator_str.empty()) {
+                if (generator_str == "ninja") {
+                    generator = cmake::ninja;
+                    cx().info(context::generic, "using Ninja generator for {}", name);
+                } else if (generator_str == "jom") {
+                    generator = cmake::jom;
+                    cx().info(context::generic, "using JOM generator for {}", name);
+                } else if (generator_str == "vs") {
+                    generator = cmake::vs;
+                    cx().info(context::generic, "using Visual Studio generator for {}", name);
+                } else {
+                    cx().warning(context::generic, "unknown generator '{}', using Visual Studio", generator_str);
+                }
+            }
+            
+            // Build the plugin using the modorganizer task with the specified generator
+            if (generator != cmake::vs) {
+                // Use custom generator
+                mo_task.build_with_custom_generator(generator);
+            } else {
+                // Use default build process
+                mo_task.run();
+                
+                // Generate compile_commands.json if enabled
+                mo_task.generate_compile_commands();
+            }
         }
     }
 

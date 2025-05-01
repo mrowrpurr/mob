@@ -283,6 +283,10 @@ namespace mob::tasks {
         // Build the project using a custom generator (e.g., Ninja)
         // This is used by local_plugins to build local plugins with Ninja
         void build_with_custom_generator(cmake::generators generator);
+        
+        // Generate compile_commands.json for the project using Ninja
+        // This is used to provide better IDE integration
+        void generate_compile_commands();
 
     protected:
         void do_clean(clean c) override;
