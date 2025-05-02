@@ -43,4 +43,18 @@ This approach avoids having to restructure the order of operations in main.cpp, 
 - [x] 2. Implement a simple parser for this file that ignores comments and parses plugin definitions.
 - [x] 3. Update the `register_plugin_tasks()` method to register each plugin as a separate task with the task manager.
 - [x] 4. Ensure that the `local_plugins` task properly handles the `mob build local_plugin` command.
-- [ ] 5. Test the implementation with `mob list` and `mob build` commands.
+- [x] 5. Test the implementation with `mob list` and `mob build` commands.
+- [x] 6. Enhance the implementation to load `mob.local_plugins.ini` files from the current directory and all parent directories.
+
+## Additional Enhancements
+
+The implementation now includes the following enhancements:
+
+1. **Hierarchical INI File Loading**: The system now searches for `mob.local_plugins.ini` files in:
+   - The current directory
+   - All parent directories up to the filesystem root
+   - The directory containing the mob executable
+
+2. **Plugin Override Mechanism**: When the same plugin is defined in multiple INI files, the one closest to the current directory takes precedence. This allows for more specific configurations to override more general ones.
+
+3. **Robust Error Handling**: The system gracefully handles missing or invalid INI files, providing appropriate debug messages.

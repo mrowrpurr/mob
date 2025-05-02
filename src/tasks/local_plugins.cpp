@@ -15,24 +15,63 @@ namespace mob {
     // Global container for local plugins
     static std::map<std::string, fs::path> g_local_plugins;
     
-    // Get the path to the local plugins ini file
-    fs::path get_local_plugins_ini_path()
+    // Get all paths to local plugins ini files, starting from the current directory
+    // and walking up to the filesystem root
+    std::vector<fs::path> get_local_plugins_ini_paths()
     {
-        // First check if there's a local_plugins.ini in the current directory
-        fs::path local_ini = "mob.local_plugins.ini";
-        if (fs::exists(local_ini)) {
-            return fs::absolute(local_ini);
+        std::vector<fs::path> ini_paths;
+        
+        // Start with the current directory
+        fs::path current_dir = fs::current_path();
+        
+        // Walk up the directory tree to the root
+        while (!current_dir.empty()) {
+            // Check for mob.local_plugins.ini in this directory
+            fs::path local_ini = current_dir / "mob.local_plugins.ini";
+            if (fs::exists(local_ini)) {
+                ini_paths.push_back(fs::absolute(local_ini));
+                gcx().debug(context::generic, "Found local plugins ini at {}", path_to_utf8(local_ini));
+            }
+            
+            // Move to the parent directory
+            fs::path parent_dir = current_dir.parent_path();
+            
+            // Break if we've reached the root (parent is the same as current)
+            if (parent_dir == current_dir) {
+                break;
+            }
+            
+            current_dir = parent_dir;
         }
         
-        // Then check in the same directory as the main ini file
-        fs::path main_ini_dir = fs::path(mob_exe_path()).parent_path();
-        fs::path main_dir_local_ini = main_ini_dir / "mob.local_plugins.ini";
+        // Also check in the same directory as the main exe
+        fs::path main_exe_dir = fs::path(mob_exe_path()).parent_path();
+        fs::path main_dir_local_ini = main_exe_dir / "mob.local_plugins.ini";
+        
+        // Only add if it's not already in the list
         if (fs::exists(main_dir_local_ini)) {
-            return main_dir_local_ini;
+            bool already_added = false;
+            for (const auto& path : ini_paths) {
+                if (fs::equivalent(path, main_dir_local_ini)) {
+                    already_added = true;
+                    break;
+                }
+            }
+            
+            if (!already_added) {
+                ini_paths.push_back(main_dir_local_ini);
+                gcx().debug(context::generic, "Found local plugins ini at {}", path_to_utf8(main_dir_local_ini));
+            }
         }
         
-        // Return the default path even if it doesn't exist yet
-        return fs::absolute(local_ini);
+        // If no ini files were found, return the default path in the current directory
+        if (ini_paths.empty()) {
+            fs::path default_ini = fs::absolute("mob.local_plugins.ini");
+            ini_paths.push_back(default_ini);
+            gcx().debug(context::generic, "No local plugins ini files found, using default path {}", path_to_utf8(default_ini));
+        }
+        
+        return ini_paths;
     }
     
     // Parse a line from the local plugins ini file
@@ -69,51 +108,57 @@ namespace mob {
         return {name, path};
     }
     
-    // Initialize the global container from the local plugins ini file
+    // Initialize the global container from all local plugins ini files
     void init_local_plugins()
     {
         // Clear the container first
         g_local_plugins.clear();
         
-        // Get the path to the local plugins ini file
-        fs::path ini_path = get_local_plugins_ini_path();
+        // Get all paths to local plugins ini files
+        std::vector<fs::path> ini_paths = get_local_plugins_ini_paths();
         
-        // Check if the file exists
-        if (!fs::exists(ini_path)) {
-            gcx().debug(context::generic, "Local plugins ini file not found at {}", path_to_utf8(ini_path));
-            return;
-        }
-        
-        gcx().debug(context::generic, "Reading local plugins from {}", path_to_utf8(ini_path));
-        
-        // Open the file
-        std::ifstream ini_file(ini_path);
-        if (!ini_file) {
-            gcx().warning(context::generic, "Failed to open local plugins ini file at {}", path_to_utf8(ini_path));
-            return;
-        }
-        
-        // Read the file line by line
-        std::string line;
-        while (std::getline(ini_file, line)) {
-            // Parse the line
-            auto [name, path_str] = parse_local_plugins_ini_line(line);
+        // Process each ini file in reverse order (from root to current directory)
+        // This way, plugins defined in directories closer to the current directory
+        // will override those defined in directories closer to the root
+        for (auto it = ini_paths.rbegin(); it != ini_paths.rend(); ++it) {
+            const fs::path& ini_path = *it;
             
-            // Skip invalid lines
-            if (name.empty() || path_str.empty()) {
+            // Skip if the file doesn't exist
+            if (!fs::exists(ini_path)) {
                 continue;
             }
             
-            // Store the plugin path
-            fs::path plugin_path = fs::path(path_str);
-            g_local_plugins[name] = plugin_path;
+            gcx().debug(context::generic, "Reading local plugins from {}", path_to_utf8(ini_path));
             
-            gcx().debug(context::generic, "Found local plugin: {} at {}", name, path_to_utf8(plugin_path));
+            // Open the file
+            std::ifstream ini_file(ini_path);
+            if (!ini_file) {
+                gcx().warning(context::generic, "Failed to open local plugins ini file at {}", path_to_utf8(ini_path));
+                continue;
+            }
+            
+            // Read the file line by line
+            std::string line;
+            while (std::getline(ini_file, line)) {
+                // Parse the line
+                auto [name, path_str] = parse_local_plugins_ini_line(line);
+                
+                // Skip invalid lines
+                if (name.empty() || path_str.empty()) {
+                    continue;
+                }
+                
+                // Store the plugin path (overriding any existing entry with the same name)
+                fs::path plugin_path = fs::path(path_str);
+                g_local_plugins[name] = plugin_path;
+                
+                gcx().debug(context::generic, "Found local plugin: {} at {}", name, path_to_utf8(plugin_path));
+            }
         }
         
-        // No fallbacks - only use what's in the INI file
+        // No fallbacks - only use what's in the INI files
         if (g_local_plugins.empty()) {
-            gcx().debug(context::generic, "No local plugins found in {}", path_to_utf8(ini_path));
+            gcx().debug(context::generic, "No local plugins found in any ini files");
         }
     }
     
