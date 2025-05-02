@@ -8,36 +8,112 @@
 #include "../core/process.h"
 #include "../tools/tools.h"
 #include "../utility/fs.h"
+#include <fstream>
+#include <string>
 
 namespace mob {
     // Global container for local plugins
     static std::map<std::string, fs::path> g_local_plugins;
     
-    // Initialize the global container from the INI file
+    // Get the path to the local plugins ini file
+    fs::path get_local_plugins_ini_path()
+    {
+        // First check if there's a local_plugins.ini in the current directory
+        fs::path local_ini = "mob.local_plugins.ini";
+        if (fs::exists(local_ini)) {
+            return fs::absolute(local_ini);
+        }
+        
+        // Then check in the same directory as the main ini file
+        fs::path main_ini_dir = fs::path(mob_exe_path()).parent_path();
+        fs::path main_dir_local_ini = main_ini_dir / "mob.local_plugins.ini";
+        if (fs::exists(main_dir_local_ini)) {
+            return main_dir_local_ini;
+        }
+        
+        // Return the default path even if it doesn't exist yet
+        return fs::absolute(local_ini);
+    }
+    
+    // Parse a line from the local plugins ini file
+    // Returns a pair of (plugin_name, plugin_path) if the line is valid
+    // Returns an empty pair if the line is a comment or empty
+    std::pair<std::string, std::string> parse_local_plugins_ini_line(const std::string& line)
+    {
+        // Skip empty lines
+        if (line.empty()) {
+            return {};
+        }
+        
+        // Skip comment lines
+        if (line[0] == ';' || line[0] == '#') {
+            return {};
+        }
+        
+        // Find the equals sign
+        size_t equals_pos = line.find('=');
+        if (equals_pos == std::string::npos) {
+            return {};
+        }
+        
+        // Extract the plugin name and path
+        std::string name = line.substr(0, equals_pos);
+        std::string path = line.substr(equals_pos + 1);
+        
+        // Trim whitespace
+        name.erase(0, name.find_first_not_of(" \t"));
+        name.erase(name.find_last_not_of(" \t") + 1);
+        path.erase(0, path.find_first_not_of(" \t"));
+        path.erase(path.find_last_not_of(" \t") + 1);
+        
+        return {name, path};
+    }
+    
+    // Initialize the global container from the local plugins ini file
     void init_local_plugins()
     {
         // Clear the container first
         g_local_plugins.clear();
         
-        // Get the local_plugins section from the already loaded INI files
-        auto section = conf().get_section("local_plugins");
+        // Get the path to the local plugins ini file
+        fs::path ini_path = get_local_plugins_ini_path();
         
-        // Process each entry in the section
-        for (const auto& [name, path_str] : section) {
-            // Skip comments
-            if (name.starts_with("#")) {
+        // Check if the file exists
+        if (!fs::exists(ini_path)) {
+            gcx().debug(context::generic, "Local plugins ini file not found at {}", path_to_utf8(ini_path));
+            return;
+        }
+        
+        gcx().debug(context::generic, "Reading local plugins from {}", path_to_utf8(ini_path));
+        
+        // Open the file
+        std::ifstream ini_file(ini_path);
+        if (!ini_file) {
+            gcx().warning(context::generic, "Failed to open local plugins ini file at {}", path_to_utf8(ini_path));
+            return;
+        }
+        
+        // Read the file line by line
+        std::string line;
+        while (std::getline(ini_file, line)) {
+            // Parse the line
+            auto [name, path_str] = parse_local_plugins_ini_line(line);
+            
+            // Skip invalid lines
+            if (name.empty() || path_str.empty()) {
                 continue;
             }
             
-            fs::path plugin_path = fs::path(path_str);
-            
             // Store the plugin path
+            fs::path plugin_path = fs::path(path_str);
             g_local_plugins[name] = plugin_path;
+            
+            gcx().debug(context::generic, "Found local plugin: {} at {}", name, path_to_utf8(plugin_path));
         }
         
         // No fallbacks - only use what's in the INI file
         if (g_local_plugins.empty()) {
-            gcx().debug(context::generic, "No local plugins found in INI files");
+            gcx().debug(context::generic, "No local plugins found in {}", path_to_utf8(ini_path));
         }
     }
     
@@ -55,7 +131,7 @@ namespace mob {
 
 namespace mob::tasks {
 
-    local_plugins::local_plugins() : task("local_plugins")
+    local_plugins::local_plugins() : task("local_plugins", "local_plugin")
     {
         // Register each local plugin as a separate task
         register_plugin_tasks();
@@ -73,10 +149,12 @@ namespace mob::tasks {
         for (const auto& [name, path] : plugins) {
             // Determine if this is a gamebryo plugin based on the name
             modorganizer::flags flags = modorganizer::noflags;
-            if (name.find("gamebryo") == 0) {
+            if (name.find("game_") == 0 || name.find("modorganizer-game_") == 0) {
                 flags = modorganizer::gamebryo;
+                cx().debug(context::generic, "detected gamebryo plugin: {}", name);
             }
             
+            // Create a modorganizer task for this plugin
             add_task<modorganizer>(name, path, flags);
         }
     }
