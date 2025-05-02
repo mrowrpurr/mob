@@ -290,7 +290,13 @@ namespace mob::tasks {
             int exit_code = p.run_and_join();
             
             if (exit_code != 0) {
-                cx().error(context::generic, "failed to create junction point for {}", name);
+                // Check if the error is because the junction already exists
+                if (fs::exists(junction_path)) {
+                    cx().warning(context::generic, "junction point for {} already exists, continuing", name);
+                } else {
+                    // If it's a different error, log it but don't bail out
+                    cx().warning(context::generic, "failed to create junction point for {}, continuing", name);
+                }
             }
         }
     }
